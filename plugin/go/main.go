@@ -2,17 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/canopy-network/go-plugin/contract"
+	"github.com/canopy-network/canopy/plugin/go/contract"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
-	// start the plugin and capture the running instance
-	plugin := contract.StartPlugin(contract.DefaultConfig())
-	// start the plugin's own HTTP server exposing custom, chain-specific RPC endpoints
-	go plugin.StartRPCServer()
+	// start the plugin
+	contract.StartPlugin(contract.DefaultConfig())
 	// create a cancellable context that listens for kill signals
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
