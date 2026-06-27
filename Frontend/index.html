@@ -1433,7 +1433,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-a"><div class="ph-eye">Admin</div><div class="ph-title">Node Settings</div><div class="ph-sub">Configure RPC endpoint and network connection</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// rpc_configuration</div>
-    <div class="field"><label>RPC Endpoint</label><input id="rpc_url" type="text" placeholder="http://localhost:50002"/></div>
+    <div class="field"><label>RPC Endpoint</label><input id="rpc_url" type="text" placeholder="https://prax.val-a.grad.dev.app.canopynetwork.org/rpc"/></div>
     <div class="brow"><button class="btn bp" onclick="saveRPC()">Save &amp; Reconnect</button><button class="btn bsec" onclick="testRPC()">Test Connection</button></div>
     <div id="rpc_result" class="alert" style="display:none;margin-top:10px"></div>
   </div></div>
@@ -1558,7 +1558,7 @@ function syncDots(alive) {
 }
 setInterval(async () => {
   try {
-    const r = await fetch((window.getRPC ? window.getRPC() : 'http://localhost:50002') + '/v1/query/height', {method:'POST',body:'{}'});
+    const r = await fetch((window.getRPC ? window.getRPC() : 'https://prax.val-a.grad.dev.app.canopynetwork.org/rpc') + '/v1/query/height', {method:'POST',body:'{}'});
     const d = await r.json();
     const h = d.height || 0;
     syncDots(h > 0);
