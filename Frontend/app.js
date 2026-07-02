@@ -14,11 +14,11 @@ let bls12_381 = null;
 // CONFIG & STATE
 // ═══════════════════════════════════════════
 const getRPCHost = () => localStorage.getItem('praxis_rpc_host') || 'prax.val-a.grad.dev.app.canopynetwork.org';
-const getRPC     = () => localStorage.getItem('praxis_rpc_host') ? `http://${getRPCHost()}:50002` : 'https://prax.val-a.grad.dev.app.canopynetwork.org/rpc';
+const getRPC     = () => localStorage.getItem('praxis_rpc_host') ? `http://${getRPCHost()}:50002` : 'https://prax.val-a.grad.dev.app.canopynetwork.org';
 
 let currentHeight = 0;
 let currentNetworkID = 1;
-let currentChainID   = 1;
+let currentChainID   = 266;
 let selectedOut   = true;
 let propOut       = true;
 let revOut        = true;
@@ -242,7 +242,14 @@ window.checkRPC=async function(){
   try{
     const d=await rpc('/v1/query/height',{});currentHeight=d.height||0;
     currentNetworkID=d.network_id||d.networkID||currentNetworkID;
-    currentChainID=d.chain_id||d.chainID||currentChainID;
+    try{
+      const blk=await rpc('/v1/query/block-by-height',{height:currentHeight});
+      const hdr=blk?.blockHeader?.lastQuorumCertificate?.header;
+      if(hdr){
+        currentChainID=hdr.chainId||hdr.chainID||currentChainID;
+        currentNetworkID=hdr.networkID||hdr.networkId||currentNetworkID;
+      }
+    }catch(e){console.warn('block-by-height chainId lookup failed',e);}
     ['rpcDot','rpcDotM'].forEach(id=>{const e=document.getElementById(id);if(e)e.className='dot live';});
     const el=document.getElementById('rpcStatus');if(el)el.textContent='live';
     const hb=document.getElementById('hBadge');if(hb)hb.textContent=`block ${currentHeight}`;
@@ -844,24 +851,55 @@ window.loadMarkets = async function () {
 
     // scan only new blocks
     if (scanFrom <= tipHeight) {
-      for (let h = scanFrom; h <= tipHeight; h += BATCH) {
+      const CONCURRENCY = 8;
+      const BATCH_DELAY_MS = 150;
+      const MAX_RETRIES = 3;
+
+      async function fetchHeightWithRetry(bh, attempt = 0) {
+        try {
+          const d = await rpc('/v1/query/txs-by-height', { height: bh, perPage: 50 });
+          return d.results || [];
+        } catch (e) {
+          if (attempt < MAX_RETRIES) {
+            await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+            return fetchHeightWithRetry(bh, attempt + 1);
+          }
+          console.warn('txs-by-height failed after retries for height', bh, e);
+          return null; // signal permanent failure for this height
+        }
+      }
+
+      let lastGoodHeight = scanFrom - 1;
+
+      for (let h = scanFrom; h <= tipHeight; h += CONCURRENCY) {
         const pct = Math.round(((h - scanFrom) / Math.max(tipHeight - scanFrom, 1)) * 100);
         el.innerHTML = '<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;Scanning blocks ' + h + ' / ' + tipHeight + ' &nbsp;<span style="color:var(--green)">' + pct + '%</span></div>';
-        const batchPromises = [];
-        for (let bh = h; bh < h + BATCH && bh <= tipHeight; bh++) {
-          batchPromises.push(
-            rpc('/v1/query/txs-by-height', { height: bh, perPage: 50 })
-              .then(d => allTxs.push(...(d.results || [])))
-              .catch(() => {})
-          );
+
+        const heights = [];
+        for (let bh = h; bh < h + CONCURRENCY && bh <= tipHeight; bh++) heights.push(bh);
+
+        const results = await Promise.all(heights.map(bh => fetchHeightWithRetry(bh)));
+
+        let batchOk = true;
+        for (let i = 0; i < results.length; i++) {
+          if (results[i] === null) { batchOk = false; break; }
+          allTxs.push(...results[i]);
+          lastGoodHeight = heights[i];
         }
-        await Promise.all(batchPromises);
+
+        // checkpoint after every batch so partial progress survives 502s
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(allTxs));
+          localStorage.setItem(CACHE_HEIGHT_KEY, String(lastGoodHeight));
+        } catch(e) {}
+
+        if (!batchOk) {
+          el.innerHTML = '<div class="alert ay">Node returned errors around block ' + lastGoodHeight + '. Progress saved — click refresh to resume.</div>';
+          return;
+        }
+
+        if (BATCH_DELAY_MS) await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
       }
-      // save cache
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(allTxs));
-        localStorage.setItem(CACHE_HEIGHT_KEY, String(tipHeight));
-      } catch(e) {}
     }
 
     const marketsMap = new Map();
@@ -3091,17 +3129,3 @@ window.updateTicker = function() {
 };
 setTimeout(updateTicker, 2000);
 setInterval(updateTicker, 30000);
-
-window.saveRPC = function() {
-  const el = document.getElementById('ni_rpc');
-  if (el) { localStorage.setItem('praxis_rpc_host', el.value.trim()); }
-  checkRPC();
-  toast('RPC endpoint saved. Reconnecting...');
-};
-window.testRPC = function() {
-  const el = document.getElementById('ni_rpc');
-  const url = el ? el.value.trim() : getRPC();
-  fetch(url + '/v1/query/height', {method:'POST', body:'{}'})
-    .then(r => r.json()).then(d => toast('Connected! Height: ' + (d.height||d.Height||JSON.stringify(d))))
-    .catch(e => toast('Failed: ' + e.message, true));
-};
