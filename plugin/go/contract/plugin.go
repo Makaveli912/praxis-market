@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"math/rand"
 	"reflect"
 	"sync"
 	"time"
@@ -35,7 +36,7 @@ type Plugin struct {
 const socketPath = "plugin.sock"
 
 // StartPlugin() creates and starts a plguin
-func StartPlugin(c Config) {
+func StartPlugin(c Config) *Plugin {
 	var conn net.Conn
 	// connect to the socket
 	sockPath := filepath.Join(c.DataDirPath, socketPath)
@@ -67,7 +68,7 @@ func StartPlugin(c Config) {
 		log.Fatal(err.Error())
 	}
 	// exit
-	return
+	return p
 }
 
 // Handshake() sends the contract configuration to the FSM and awaits a reply
@@ -248,6 +249,49 @@ func (p *Plugin) sendProtoMsg(ptr proto.Message) *PluginError {
 	return p.sendLengthPrefixed(bz)
 }
 
+// QueryState() executes a detached, read-only state query against Canopy at the given height (0 = latest committed).
+// Unlike StateRead(), it is NOT tied to an in-flight tx/block lifecycle and does not require a Contract context;
+// it allocates its own request id, making it safe to call from custom RPC handlers (e.g. an HTTP server).
+func (p *Plugin) QueryState(height uint64, request *PluginStateReadRequest) (*PluginStateReadResponse, *PluginError) {
+	response, err := p.sendDetachedSync(&PluginToFSM_Query{Query: &PluginQueryRequest{Height: height, Read: request}})
+	if err != nil {
+		return nil, err
+	}
+	wrapper, ok := response.(*FSMToPlugin_Query)
+	if !ok {
+		return nil, ErrUnexpectedFSMToPlugin(reflect.TypeOf(response))
+	}
+	if wrapper.Query != nil && wrapper.Query.Error != nil {
+		return nil, wrapper.Query.Error
+	}
+	return wrapper.Query.GetRead(), nil
+}
+
+// sendDetachedSync() sends a detached (non-lifecycle) request to the FSM and waits for a response.
+func (p *Plugin) sendDetachedSync(request isPluginToFSM_Payload) (isFSMToPlugin_Payload, *PluginError) {
+	ch, requestId, err := p.sendDetachedAsync(request)
+	if err != nil {
+		return nil, err
+	}
+	return p.waitForResponse(ch, requestId)
+}
+
+// sendDetachedAsync() sends a detached (non-lifecycle) request without waiting for a response.
+func (p *Plugin) sendDetachedAsync(request isPluginToFSM_Payload) (ch chan isFSMToPlugin_Payload, requestId uint64, err *PluginError) {
+	requestId = rand.Uint64()
+	ch = make(chan isFSMToPlugin_Payload, 1)
+	p.l.Lock()
+	p.pending[requestId] = ch
+	p.l.Unlock()
+	err = p.sendProtoMsg(&PluginToFSM{Id: requestId, Payload: request})
+	if err != nil {
+		p.l.Lock()
+		delete(p.pending, requestId)
+		p.l.Unlock()
+	}
+	return
+}
+
 // receiveProtoMsg() receives and decodes a length-prefixed proto message from a net.Conn
 func (p *Plugin) receiveProtoMsg(ptr proto.Message) *PluginError {
 	// read the message from the wire
@@ -372,6 +416,7 @@ func JoinLenPrefix(toAppend ...[]byte) []byte {
 type Config struct {
 	ChainId     uint64 `json:"chainId"`
 	DataDirPath string `json:"dataDirPath"`
+	RPCAddress  string `json:"rpcAddress"`
 }
 
 // DefaultConfig() returns the default configuration
@@ -380,6 +425,7 @@ func DefaultConfig() Config {
 	return Config{
 		ChainId:     1,
 		DataDirPath: filepath.Join("/tmp/plugin/"),
+		RPCAddress:  ":50010",
 	}
 }
 

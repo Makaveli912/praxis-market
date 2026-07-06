@@ -1,16 +1,15 @@
-module github.com/canopy-network/go-plugin/tutorial
+module github.com/canopy-network/canopy/plugin/go/tutorial
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25
 
 require (
+	github.com/canopy-network/go-plugin v0.0.0-20250805010535-e8018c247e96
 	github.com/drand/kyber v1.3.2
 	github.com/drand/kyber-bls12381 v0.3.4
 	google.golang.org/protobuf v1.36.6
 )
 
-require github.com/golang/protobuf v1.5.0 // indirect
+require github.com/golang/protobuf v1.5.0
 
 require (
 	github.com/canopy-network/canopy/plugin/go v0.0.0

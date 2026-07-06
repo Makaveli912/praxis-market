@@ -1,8 +1,8 @@
-package tutorial
+package main
 
 import (
     "testing"
-    contract "github.com/canopy-network/go-plugin/contract"
+    contract "github.com/canopy-network/canopy/plugin/go/contract"
 )
 
 func TestFundMetaMaskAddr(t *testing.T) {

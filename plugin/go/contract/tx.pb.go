@@ -7,9 +7,9 @@
 package contract
 
 import (
-	any1 "github.com/golang/protobuf/ptypes/any"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -78,7 +78,7 @@ func (x *Signature) GetSignature() []byte {
 type Transaction struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MessageType   string                 `protobuf:"bytes,1,opt,name=message_type,json=messageType,proto3" json:"message_type,omitempty"`
-	Msg           *any1.Any              `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Msg           *anypb.Any             `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
 	Signature     *Signature             `protobuf:"bytes,3,opt,name=signature,proto3" json:"signature,omitempty"`
 	CreatedHeight uint64                 `protobuf:"varint,4,opt,name=created_height,json=createdHeight,proto3" json:"created_height,omitempty"`
 	Time          uint64                 `protobuf:"varint,5,opt,name=time,proto3" json:"time,omitempty"`
@@ -127,7 +127,7 @@ func (x *Transaction) GetMessageType() string {
 	return ""
 }
 
-func (x *Transaction) GetMsg() *any1.Any {
+func (x *Transaction) GetMsg() *anypb.Any {
 	if x != nil {
 		return x.Msg
 	}
@@ -2842,7 +2842,7 @@ var file_tx_proto_goTypes = []any{
 	(*ResolverIndex)(nil),               // 40: types.ResolverIndex
 	(*MarketIndex)(nil),                 // 41: types.MarketIndex
 	(*GlobalStats)(nil),                 // 42: types.GlobalStats
-	(*any1.Any)(nil),                    // 43: google.protobuf.Any
+	(*anypb.Any)(nil),                   // 43: google.protobuf.Any
 }
 var file_tx_proto_depIdxs = []int32{
 	43, // 0: types.Transaction.msg:type_name -> google.protobuf.Any
