@@ -49,18 +49,18 @@ func TuneRuntimeGC(gcPercent, memLimitPercent int, log LoggerI) {
 			limit := int64(float64(total) * float64(memLimitPercent) / 100.0)
 			if limit > 0 {
 				debug.SetMemoryLimit(limit)
-				log.Infof("Set soft memory limit (GOMEMLIMIT) to %d bytes (%d%% of %d detected bytes)",
+				logInfof(log, "Set soft memory limit (GOMEMLIMIT) to %d bytes (%d%% of %d detected bytes)",
 					limit, memLimitPercent, total)
 			}
 		} else {
-			log.Warnf("Could not detect a memory limit; leaving GOMEMLIMIT at its default")
+			logWarnf(log, "Could not detect a memory limit; leaving GOMEMLIMIT at its default")
 		}
 	}
 	// raise the GC target percentage so the collector runs less often; the soft
 	// memory limit set above bounds the resulting heap growth
 	if gcPercent > 0 && os.Getenv("GOGC") == "" {
 		previous := debug.SetGCPercent(gcPercent)
-		log.Infof("Set GC target percentage (GOGC) to %d (was %d)", gcPercent, previous)
+		logInfof(log, "Set GC target percentage (GOGC) to %d (was %d)", gcPercent, previous)
 	}
 }
 
@@ -122,4 +122,18 @@ func hostMemoryTotal() (uint64, bool) {
 		return kb * 1024, true
 	}
 	return 0, false
+}
+
+// logInfof() logs at info level when a logger is provided.
+func logInfof(log LoggerI, format string, args ...any) {
+	if log != nil {
+		log.Infof(format, args...)
+	}
+}
+
+// logWarnf() logs at warn level when a logger is provided.
+func logWarnf(log LoggerI, format string, args ...any) {
+	if log != nil {
+		log.Warnf(format, args...)
+	}
 }
