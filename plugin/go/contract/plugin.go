@@ -137,7 +137,7 @@ func (p *Plugin) ListenForInbound() {
 				// route the message
 				switch payload := msg.Payload.(type) {
 				// response to a request made by the Contract
-				case *FSMToPlugin_Config, *FSMToPlugin_StateRead, *FSMToPlugin_StateWrite:
+				case *FSMToPlugin_Config, *FSMToPlugin_StateRead, *FSMToPlugin_StateWrite, *FSMToPlugin_Query:
 					log.Println("Received FSM response")
 					return p.handleFSMResponse(msg)
 				// inbound requests from the FSM
