@@ -838,7 +838,8 @@ window.loadMarkets = async function () {
 
     // load cache
     let allTxs = [];
-    let scanFrom = 1;
+    const SCAN_WINDOW = 15000; // cap fresh scans to last ~15k blocks
+    let scanFrom = Math.max(1, tipHeight - SCAN_WINDOW);
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       const cachedHeight = parseInt(localStorage.getItem(CACHE_HEIGHT_KEY) || '0');
@@ -847,7 +848,7 @@ window.loadMarkets = async function () {
         scanFrom = cachedHeight + 1;
         el.innerHTML = '<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;Cache loaded to block ' + cachedHeight + ' — scanning new blocks…</div>';
       }
-    } catch(e) { allTxs = []; scanFrom = 1; }
+    } catch(e) { allTxs = []; scanFrom = Math.max(1, tipHeight - SCAN_WINDOW); }
 
     // scan only new blocks
     if (scanFrom <= tipHeight) {
