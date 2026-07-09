@@ -1,6 +1,6 @@
 module github.com/canopy-network/canopy/plugin/go/tutorial
 
-go 1.25
+go 1.26
 
 require (
 	github.com/canopy-network/go-plugin v0.0.0-20250805010535-e8018c247e96
