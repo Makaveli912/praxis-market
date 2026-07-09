@@ -1,9 +1,6 @@
 module github.com/canopy-network/canopy/plugin/go
 
-go 1.24.0
-
-toolchain go1.24.2
-go 1.26
+go 1.25
 
 require (
 	github.com/drand/kyber v1.3.2

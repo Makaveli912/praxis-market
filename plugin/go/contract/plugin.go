@@ -29,6 +29,7 @@ type Plugin struct {
 	pending         map[uint64]chan isFSMToPlugin_Payload // the outstanding requests from the contract
 	requestContract map[uint64]*Contract                  // maps request IDs to their contract context for concurrent operations
 	l               sync.Mutex                            // thread safety
+	writeMu         sync.Mutex                            // serializes actual socket writes
 	config          Config                                // general app config
 }
 
@@ -240,6 +241,8 @@ func (p *Plugin) waitForResponse(ch chan isFSMToPlugin_Payload, requestId uint64
 
 // sendProtoMsg() encodes and sends a length-prefixed proto message to a net.Conn
 func (p *Plugin) sendProtoMsg(ptr proto.Message) *PluginError {
+	p.writeMu.Lock()
+	defer p.writeMu.Unlock()
 	// marshal into proto bytes
 	bz, err := Marshal(ptr)
 	if err != nil {
