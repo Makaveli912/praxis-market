@@ -15,7 +15,7 @@ let bls12_381 = null;
 // ═══════════════════════════════════════════
 const getRPCHost = () => localStorage.getItem('praxis_rpc_host') || 'prax.val-a.grad.dev.app.canopynetwork.org';
 const getRPC     = () => localStorage.getItem('praxis_rpc_host') ? `http://${getRPCHost()}:50002` : 'https://prax.val-a.grad.dev.app.canopynetwork.org/rpc';
-const getPluginRPC = () => localStorage.getItem('praxis_plugin_rpc_host') ? `http://${localStorage.getItem('praxis_plugin_rpc_host')}` : 'https://prax.val-a.grad.dev.app.canopynetwork.org:50010';
+const getPluginRPC = () => localStorage.getItem('praxis_plugin_rpc_host') ? `http://${localStorage.getItem('praxis_plugin_rpc_host')}` : 'https://prax.val-a.grad.dev.app.canopynetwork.org/plugin';
 
 let currentHeight = 0;
 let currentNetworkID = 1;
