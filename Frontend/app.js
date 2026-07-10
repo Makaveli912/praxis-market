@@ -15,6 +15,7 @@ let bls12_381 = null;
 // ═══════════════════════════════════════════
 const getRPCHost = () => localStorage.getItem('praxis_rpc_host') || 'prax.val-a.grad.dev.app.canopynetwork.org';
 const getRPC     = () => localStorage.getItem('praxis_rpc_host') ? `http://${getRPCHost()}:50002` : 'https://prax.val-a.grad.dev.app.canopynetwork.org/rpc';
+const getPluginRPC = () => localStorage.getItem('praxis_plugin_rpc_host') ? `http://${localStorage.getItem('praxis_plugin_rpc_host')}` : 'https://prax.val-a.grad.dev.app.canopynetwork.org:50010';
 
 let currentHeight = 0;
 let currentNetworkID = 1;
@@ -825,220 +826,51 @@ function renderCurrentTab() {
 
 window.loadMarkets = async function () {
   const el = document.getElementById('marketsList');
-  const countEl = document.getElementById('sb_c');
-  el.innerHTML = '<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;loading markets from chain</div>';
+  el.innerHTML = '<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;loading markets</div>';
   try {
     await checkRPC();
 
     const heightResp = await rpc('/v1/query/height', {});
-    const tipHeight = Number(heightResp.height || currentHeight || 1);
-    const BATCH = 100;
-    const CACHE_KEY = 'praxis_tx_cache';
-    const CACHE_HEIGHT_KEY = 'praxis_scan_height';
+    currentHeight = Number(heightResp.height || currentHeight || 1);
 
-    // load cache
-    let allTxs = [];
-    const SCAN_WINDOW = 15000; // cap fresh scans to last ~15k blocks
-    let scanFrom = Math.max(1, tipHeight - SCAN_WINDOW);
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      const cachedHeight = parseInt(localStorage.getItem(CACHE_HEIGHT_KEY) || '0');
-      if (cached && cachedHeight > 0) {
-        allTxs = JSON.parse(cached);
-        scanFrom = cachedHeight + 1;
-        el.innerHTML = '<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;Cache loaded to block ' + cachedHeight + ' — scanning new blocks…</div>';
-      }
-    } catch(e) { allTxs = []; scanFrom = Math.max(1, tipHeight - SCAN_WINDOW); }
+    const pluginResp = await fetch(getPluginRPC() + '/v1/query/markets');
+    if (!pluginResp.ok) throw new Error('plugin RPC returned ' + pluginResp.status);
+    const raw = await pluginResp.json();
 
-    // scan only new blocks
-    if (scanFrom <= tipHeight) {
-      const CONCURRENCY = 8;
-      const BATCH_DELAY_MS = 150;
-      const MAX_RETRIES = 3;
-
-      async function fetchHeightWithRetry(bh, attempt = 0) {
-        try {
-          const d = await rpc('/v1/query/txs-by-height', { height: bh, perPage: 50 });
-          return d.results || [];
-        } catch (e) {
-          if (attempt < MAX_RETRIES) {
-            await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
-            return fetchHeightWithRetry(bh, attempt + 1);
-          }
-          console.warn('txs-by-height failed after retries for height', bh, e);
-          return null; // signal permanent failure for this height
-        }
-      }
-
-      let lastGoodHeight = scanFrom - 1;
-
-      for (let h = scanFrom; h <= tipHeight; h += CONCURRENCY) {
-        const pct = Math.round(((h - scanFrom) / Math.max(tipHeight - scanFrom, 1)) * 100);
-        el.innerHTML = '<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;Scanning blocks ' + h + ' / ' + tipHeight + ' &nbsp;<span style="color:var(--green)">' + pct + '%</span></div>';
-
-        const heights = [];
-        for (let bh = h; bh < h + CONCURRENCY && bh <= tipHeight; bh++) heights.push(bh);
-
-        const results = await Promise.all(heights.map(bh => fetchHeightWithRetry(bh)));
-
-        let batchOk = true;
-        for (let i = 0; i < results.length; i++) {
-          if (results[i] === null) { batchOk = false; break; }
-          allTxs.push(...results[i]);
-          lastGoodHeight = heights[i];
-        }
-
-        // checkpoint after every batch so partial progress survives 502s
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(allTxs));
-          localStorage.setItem(CACHE_HEIGHT_KEY, String(lastGoodHeight));
-        } catch(e) {}
-
-        if (!batchOk) {
-          el.innerHTML = '<div class="alert ay">Node returned errors around block ' + lastGoodHeight + '. Progress saved — click refresh to resume.</div>';
-          return;
-        }
-
-        if (BATCH_DELAY_MS) await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
-      }
-    }
-
-    const marketsMap = new Map();
-
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'create_market') continue;
-      const msg = (tx.transaction && tx.transaction.msg) || {};
-      const question = msg.question || '';
-      const rules    = msg.rules || '';
-      const creator  = tx.sender || '';
-      const b0       = BigInt(msg.b0 || 0);
-      const expiry   = BigInt(msg.expiryTime || msg.expiry_time || 0);
-      const nonce    = BigInt(msg.nonce || 0);
-      const lmsrSeed = b0 > 50000000n ? b0 - 50000000n : b0;
-
-      let marketId = tx.txHash || (creator + String(nonce));
-      try {
-        const creatorBytes = /^[0-9a-fA-F]{40}$/.test(creator)
-          ? h2b(creator)
-          : (() => { const bin = atob(creator); return new Uint8Array([...bin].map(c => c.charCodeAt(0))); })();
-        const nonceBytes = new Uint8Array(8);
-        let n = nonce;
-        for (let i = 7; i >= 0; i--) { nonceBytes[i] = Number(n & 0xffn); n >>= 8n; }
-        const input = new Uint8Array(creatorBytes.length + 8);
-        input.set(creatorBytes); input.set(nonceBytes, 20);
-        const hash = await crypto.subtle.digest('SHA-256', input);
-        marketId = b2h(new Uint8Array(hash).slice(0, 20));
-      } catch (e) {}
-
-      if (!marketsMap.has(marketId)) {
-        marketsMap.set(marketId, {
-          txHash: tx.txHash || '',
-          marketId,
-          question: question || '(no question)',
-          rules: rules || '',
-          creator,
-          b0,
-          lmsrSeed,
-          expiry,
-          nonce,
-          status: 0,
-          qYes: lmsrSeed / 2n,
-          qNo:  lmsrSeed / 2n,
-        });
-      }
-    }
-
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'submit_prediction') continue;
-      const msg = (tx.transaction && tx.transaction.msg) || {};
-      const rawMid = msg.marketId || msg.market_id || '';
-      let marketId = rawMid;
-      try { const b = Uint8Array.from(atob(rawMid), c => c.charCodeAt(0)); marketId = b2h(b); } catch(e) {}
-      const outcome  = msg.outcome === true || msg.outcome === 'true' || msg.outcome === 1;
-      const amount   = BigInt(msg.shares || msg.amount || 0);
-      if (!marketId || !marketsMap.has(marketId)) continue;
-      const m = marketsMap.get(marketId);
-      if (outcome) { m.qYes += amount; } else { m.qNo += amount; }
-    }
-
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'propose_outcome') continue;
-      const msg = (tx.transaction && tx.transaction.msg) || {};
-      const rawMid = msg.marketId || '';
-      let marketId = rawMid;
-      try { const b = Uint8Array.from(atob(rawMid), c => c.charCodeAt(0)); marketId = b2h(b); } catch(e) {}
-      if (!marketId || !marketsMap.has(marketId)) continue;
-      const m = marketsMap.get(marketId);
-      let resolver = tx.sender || '';
-      try { const rb = Uint8Array.from(atob(msg.resolverAddress || ''), c => c.charCodeAt(0)); resolver = b2h(rb); } catch(e) {}
-      m.status = 4;
-      m.resolver = resolver;
-      m.proposedOutcome = msg.proposedOutcome;
-    }
-
-    // Build resolver registry
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'register_resolver') continue;
-      const msg = (tx.transaction && tx.transaction.msg) || {};
-      const addr = tx.sender || '';
-      let stake = BigInt(msg.stakeAmount || msg.stake_amount || 0);
-      if (!_resolverRegistry.has(addr)) {
-        _resolverRegistry.set(addr, { stake, proposalCount: 0, rrs: 10 });
-      } else {
-        _resolverRegistry.get(addr).stake = stake;
-      }
-    }
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'propose_outcome') continue;
-      const addr = tx.sender || '';
-      if (_resolverRegistry.has(addr)) {
-        _resolverRegistry.get(addr).proposalCount++;
-      }
-    }
-    // sync rrs estimate into registry
-    _resolverRegistry.forEach(r => { r.rrs = Math.min(10 + r.proposalCount * 10, 999); });
-
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'finalize_market') continue;
-      const msg = (tx.transaction && tx.transaction.msg) || {};
-      const rawMid = msg.marketId || '';
-      let marketId = rawMid;
-      try { const b = Uint8Array.from(atob(rawMid), c => c.charCodeAt(0)); marketId = b2h(b); } catch(e) {}
-      if (!marketId || !marketsMap.has(marketId)) continue;
-      marketsMap.get(marketId).status = 6;
-    }
-
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'file_dispute') continue;
-      const msg = (tx.transaction && tx.transaction.msg) || {};
-      const rawMid = msg.marketId || '';
-      let marketId = rawMid;
-      try { const b = Uint8Array.from(atob(rawMid), c => c.charCodeAt(0)); marketId = b2h(b); } catch(e) {}
-      if (!marketId || !marketsMap.has(marketId)) continue;
-      marketsMap.get(marketId).status = 5;
-    }
-
-    for (const tx of allTxs) {
-      if (tx.messageType !== 'cancel_market') continue;
-      const msg = (tx.transaction && tx.transaction.msg) || {};
-      const rawMid = msg.marketId || '';
-      let marketId = rawMid;
-      try { const b = Uint8Array.from(atob(rawMid), c => c.charCodeAt(0)); marketId = b2h(b); } catch(e) {}
-      if (!marketId || !marketsMap.has(marketId)) continue;
-      marketsMap.get(marketId).status = 1;
-    }
-
-    const markets = [...marketsMap.values()];
-    for (const m of markets) {
-      if (m.expiry && currentHeight > Number(m.expiry) && m.status === 0) m.status = 8;
-    }
+    const markets = (raw || []).map(entry => {
+      const id = entry.id || '';
+      const mk = entry.market || {};
+      const qYes = BigInt(mk.q_yes || 0);
+      const qNo  = BigInt(mk.q_no || 0);
+      const expiry = BigInt(mk.expiry_time || 0);
+      let status = 0;
+      if (expiry && currentHeight > Number(expiry)) status = 8;
+      // NOTE: resolver-driven states (proposed/finalized/disputed) are not
+      // yet exposed by /v1/query/markets — only expiry-based live/closed
+      // is derivable here. Extend the plugin response with a status field
+      // to support the Proposed/Closed tabs fully.
+      return {
+        txHash: id,
+        marketId: id,
+        question: mk.question || '(no question)',
+        rules: mk.rules || '',
+        creator: mk.creator || '',
+        b0: BigInt(mk.b_eff || 0),
+        lmsrSeed: BigInt(mk.b_eff || 0),
+        expiry,
+        nonce: 0n,
+        status,
+        qYes,
+        qNo,
+      };
+    });
 
     _allMarkets = markets;
     checkRoles();
     renderCurrentTab();
 
   } catch (e) {
-    el.innerHTML = '<div class="alert ar">⚠ Cannot reach node at <code>' + getRPC() + '</code><br>' + esc(e.message) + '</div>';
+    el.innerHTML = '<div class="alert ar">⚠ Cannot reach plugin RPC at <code>' + getPluginRPC() + '</code><br>' + esc(e.message) + '</div>';
   }
 };
 
