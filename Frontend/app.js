@@ -1981,6 +1981,55 @@ function buildRulesWithImg(rules, imgUrl) {
   return stripped + (stripped ? ' ' : '') + '[IMG:' + imgUrl.trim() + ']';
 }
 
+window.handleImageUpload = async function(input) {
+  const file = input.files && input.files[0];
+  const hint = document.getElementById('c_img_hint');
+  const preview = document.getElementById('c_img_preview');
+  const img = document.getElementById('c_img_preview_img');
+  const hidden = document.getElementById('c_img');
+  if (!file) return;
+
+  const MAX_SIZE = 5 * 1024 * 1024;
+  if (file.size > MAX_SIZE) {
+    if (hint) { hint.textContent = '✗ Image exceeds 5MB limit'; hint.style.color = 'var(--red)'; }
+    input.value = '';
+    return;
+  }
+  const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+  if (!allowed.includes(file.type)) {
+    if (hint) { hint.textContent = '✗ Unsupported file type — use PNG, JPEG, WEBP, or GIF'; hint.style.color = 'var(--red)'; }
+    input.value = '';
+    return;
+  }
+
+  // instant local preview while upload is in flight
+  const localUrl = URL.createObjectURL(file);
+  if (preview && img) {
+    img.src = localUrl;
+    preview.style.display = '';
+  }
+  if (hint) { hint.textContent = 'Uploading…'; hint.style.color = ''; }
+
+  try {
+    const res = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+    if (hidden) hidden.value = data.url;
+    if (hint) { hint.textContent = '✓ Image uploaded'; hint.style.color = 'var(--green)'; }
+  } catch (e) {
+    if (hint) { hint.textContent = '✗ ' + e.message; hint.style.color = 'var(--red)'; }
+    if (preview) preview.style.display = 'none';
+    if (hidden) hidden.value = '';
+  } finally {
+    URL.revokeObjectURL(localUrl);
+  }
+};
+
 window.previewBanner = function() {
   const url = (document.getElementById('c_img')?.value || '').trim();
   const preview = document.getElementById('c_img_preview');

@@ -1958,12 +1958,13 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     </div>
     <div class="field"><label>Rules / Resolution criteria</label><textarea id="c_rules" placeholder="Market resolves YES if…"></textarea></div>
     <div class="field">
-      <label>Market Banner Image URL <span style="color:var(--text3);font-weight:400">(optional)</span></label>
-      <input id="c_img" type="text" placeholder="https://i.imgur.com/... or ipfs://..." oninput="previewBanner()"/>
+      <label>Market Banner Image <span style="color:var(--text3);font-weight:400">(optional, max 5MB)</span></label>
+      <input id="c_img_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onchange="handleImageUpload(this)"/>
+      <input id="c_img" type="hidden" value=""/>
       <div id="c_img_preview" style="display:none;margin-top:8px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);max-height:160px">
         <img id="c_img_preview_img" src="" alt="Banner preview" style="width:100%;height:160px;object-fit:cover;display:block"/>
       </div>
-      <div class="hint" id="c_img_hint">Image will be stored on-chain via IPFS or direct URL. Recommended: 16:9, min 800x450px.</div>
+      <div class="hint" id="c_img_hint">Recommended: 16:9, min 800x450px.</div>
     </div>
     <div class="field"><label>Fee (uPRX)</label><input id="c_fee" type="number" value="10000" oninput="updateCreateBreakdown()"/></div>
     <div id="create_breakdown" class="breakdown"></div>
