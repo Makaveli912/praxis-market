@@ -30,8 +30,12 @@ For more information on the Canopy Network Protocol visit [https://canopynetwork
 
 ## Standard
 
-⪢ Canopy is an Ethereum-RPC compatible L1, so it can plug into existing Ethereum exchange, wallet, and indexer tooling for native transfers,
-  including MetaMask. Simply use the `/v1/eth` endpoint as a custom Ethereum rpc [spec](./fsm/ethereum.md)
+➪ Canopy is an Ethereum-RPC compatible L1, so it can plug into existing Ethereum exchange, wallet, and indexer tooling for native transfers,
+  including MetaMask. Simply use the `/v1/eth` endpoint as a custom Ethereum rpc [eth-spec](./fsm/ethereum.md)
+
+## RPC
+
+➪ [Full RPC Specification](./cmd/rpc/README.md)
 
 ## Protocol Documentation
 
