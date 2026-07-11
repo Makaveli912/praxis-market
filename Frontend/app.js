@@ -556,10 +556,15 @@ window.renderMarketCards = function(markets) {
     const hasBanner = !!extractImg(m.rules||'');
     const yesMulti = m.qYes > 0n ? (Number(m.qYes + m.qNo) / Number(m.qYes)).toFixed(2) : '—';
     const noMulti  = m.qNo  > 0n ? (Number(m.qYes + m.qNo) / Number(m.qNo)).toFixed(2)  : '—';
-    return `<div class="mcard ${cardClass}${hasBanner?' mcard-featured':''}" onclick="openDetail(this.dataset.mid)" data-mid="${mid}">
-    ${mkBannerImg(m.rules)}<div class="mcard-top">
-      <div class="mcard-cat">${catIcon} ${catName} &nbsp;${statusHtml}</div>
-      <div class="mcard-q">${esc(m.question || '(no question)')}</div>
+    return `<div class="mcard ${cardClass}" onclick="openDetail(this.dataset.mid)" data-mid="${mid}">
+    <div class="mcard-top">
+      <div class="mcard-head">
+        ${mkCardIcon(m.rules)}
+        <div class="mcard-head-text">
+          <div class="mcard-cat">${catIcon} ${catName} &nbsp;${statusHtml}</div>
+          <div class="mcard-q">${esc(m.question || '(no question)')}</div>
+        </div>
+      </div>
       <div class="mcard-pill-row">
         <span class="pill-yes">${yesPct}% <span class="pill-multi">${yesMulti}x</span></span>
         <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">·</span>
@@ -1958,10 +1963,12 @@ window.updateDisputeRisk = function() {
 // MARKET BANNER IMAGE SYSTEM
 // ═══════════════════════════════════════════
 
-function mkBannerImg(rules) {
+function mkCardIcon(rules) {
   const u = extractImg(rules||'');
-  if (!u) return '';
-  return '<img class="mcard-banner" src="' + u + '" alt="" onerror="this.style.display=\'none\'">';
+  if (u) {
+    return '<div class="mcard-icon-wrap"><img class="mcard-icon" src="' + u + '" alt="" onerror="this.parentElement.innerHTML=\'\u25c8\';this.parentElement.classList.add(\'mcard-icon-empty\')"></div>';
+  }
+  return '<div class="mcard-icon-wrap mcard-icon-empty">\u25c8</div>';
 }
 
 function extractImg(rules) {
@@ -2766,10 +2773,15 @@ window.runSearch = function() {
     const hasBanner = !!extractImg(m.rules||'');
     const yesMulti = m.qYes > 0n ? (Number(m.qYes + m.qNo) / Number(m.qYes)).toFixed(2) : '—';
     const noMulti  = m.qNo  > 0n ? (Number(m.qYes + m.qNo) / Number(m.qNo)).toFixed(2)  : '—';
-    return `<div class="mcard${hasBanner?' mcard-featured':''}" onclick="openDetail(this.dataset.mid)" data-mid="${mid}">
-    ${mkBannerImg(m.rules)}<div class="mcard-top">
-      <div class="mcard-cat">${catIcon} ${catName} &nbsp;${statusHtml}</div>
-      <div class="mcard-q">${esc(m.question || '(no question)')}</div>
+    return `<div class="mcard" onclick="openDetail(this.dataset.mid)" data-mid="${mid}">
+    <div class="mcard-top">
+      <div class="mcard-head">
+        ${mkCardIcon(m.rules)}
+        <div class="mcard-head-text">
+          <div class="mcard-cat">${catIcon} ${catName} &nbsp;${statusHtml}</div>
+          <div class="mcard-q">${esc(m.question || '(no question)')}</div>
+        </div>
+      </div>
       <div class="mcard-pill-row">
         <span class="pill-yes">${yesPct}% <span class="pill-multi">${yesMulti}x</span></span>
         <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">·</span>
