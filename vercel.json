@@ -1,5 +1,4 @@
 {
-  "outputDirectory": "Frontend",
   "rewrites": [
     {
       "source": "/api/rpc/(.*)",
