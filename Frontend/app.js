@@ -1750,6 +1750,13 @@ window.fillReclaim = function(id) {
 // ROLE-BASED SIDEBAR
 // ═══════════════════════════════════════════
 async function checkRoles() {
+  // DEVNET: show all nav sections/items to everyone regardless of role
+  document.getElementById('nav-admin-section').style.display = '';
+  document.querySelectorAll('.nav-admin-item').forEach(el => el.style.display = '');
+  document.getElementById('nav-resolver-section').style.display = '';
+  document.querySelectorAll('.nav-resolver-item').forEach(el => el.style.display = '');
+  return;
+
   if (!signerAddress) return;
 
   // Superadmin — full access regardless of role
