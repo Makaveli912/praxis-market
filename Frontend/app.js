@@ -871,6 +871,7 @@ window.loadMarkets = async function () {
     });
 
     _allMarkets = markets;
+    window._allMarkets = markets;
     checkRoles();
     renderCurrentTab();
 
