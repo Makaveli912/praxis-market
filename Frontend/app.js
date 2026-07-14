@@ -747,7 +747,18 @@ window.showDetail = function(marketId) {
 
   const forfeitBtn = document.getElementById('det-forfeit-btn');
   if (forfeitBtn) {
-    if (m.status === 0 && signerAddress && signerAddress !== m.creator) {
+    const signerHasPositionForForfeit = (() => {
+      try {
+        const txs = JSON.parse(localStorage.getItem('praxis_tx_cache') || '[]');
+        return txs.some(tx =>
+          tx.messageType === 'submit_prediction' &&
+          tx.sender && tx.sender.toLowerCase() === (signerAddress||'').toLowerCase() &&
+          tx.transaction && tx.transaction.msg &&
+          (() => { try { return b2h(Uint8Array.from(atob(tx.transaction.msg.marketId||''), c=>c.charCodeAt(0))) === mid; } catch { return false; } })()
+        );
+      } catch { return false; }
+    })();
+    if (m.status === 0 && signerAddress && signerAddress !== m.creator && signerHasPositionForForfeit) {
       forfeitBtn.style.display = '';
       forfeitBtn.setAttribute('onclick', 'fillForfeit(' + JSON.stringify(mid) + ')');
     } else {

@@ -2780,9 +2780,9 @@ window.showDetail = function(mid) {
     // Init trade calc
     window._detailMarketId = mid;
     window._detOutcome = true;
-    document.getElementById('dout-yes')?.classList.add('active');
-    document.getElementById('dout-no')?.classList.remove('active');
-    document.getElementById('det-bet-yes') && (document.getElementById('det-bet-yes').style.display = 'block');
+    // det-bet-yes/det-bet-no: legacy inline-buy buttons, superseded by det-place-bet.
+    // Left hidden — no supporting outcome-toggle UI (dout-yes/dout-no) exists in markup anymore.
+    document.getElementById('det-bet-yes') && (document.getElementById('det-bet-yes').style.display = 'none');
     document.getElementById('det-bet-no')  && (document.getElementById('det-bet-no').style.display  = 'none');
     updateDetTrade();
 
