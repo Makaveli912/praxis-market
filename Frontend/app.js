@@ -838,7 +838,17 @@ window.loadMarkets = async function () {
     const heightResp = await rpc('/v1/query/height', {});
     currentHeight = Number(heightResp.height || currentHeight || 1);
 
-    const pluginResp = await fetch(getPluginRPC() + '/v1/query/markets');
+    const _pluginController = new AbortController();
+    const _pluginTimeout = setTimeout(() => _pluginController.abort(), 10000);
+    let pluginResp;
+    try {
+      pluginResp = await fetch(getPluginRPC() + '/v1/query/markets', { signal: _pluginController.signal });
+    } catch (fetchErr) {
+      if (fetchErr.name === 'AbortError') throw new Error('plugin RPC timed out after 10s');
+      throw fetchErr;
+    } finally {
+      clearTimeout(_pluginTimeout);
+    }
     if (!pluginResp.ok) throw new Error('plugin RPC returned ' + pluginResp.status);
     const raw = await pluginResp.json();
 
@@ -1385,6 +1395,7 @@ injectKeyboardCopyBtns();
 const _niHost=document.getElementById('ni_host');if(_niHost)_niHost.value=getRPCHost();
 buildMobNav();
 checkRPC();
+loadMarkets();
 setInterval(checkRPC,12000);
 
 // ═══════════════════════════════════════════
