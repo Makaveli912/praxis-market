@@ -733,6 +733,12 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     gap: 16px; align-items: start;
   }
   .det-right { order: 0; }
+
+  /* Desktop: center page content instead of hugging top-left at full mobile width */
+  .page:not(#page-detail):not(#page-markets) {
+    max-width: 640px;
+    margin: 0 auto;
+  }
 }
 .det-right { order: -1; }
 
