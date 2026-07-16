@@ -1074,34 +1074,16 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   box-shadow: 0 6px 28px rgba(0,0,0,.6), 0 0 0 1px rgba(0,232,122,.1);
   transform: translateY(-2px);
 }
-/* banner — blurred atmospheric strip */
-.pcard-banner-wrap {
-  position: relative; height: 64px; overflow: hidden;
-  background: var(--bg2);
+/* icon — small inline thumbnail, no banner */
+.pcard-icon {
+  width: 22px; height: 22px; border-radius: 5px;
+  object-fit: cover; flex-shrink: 0;
+  border: 1px solid var(--border);
 }
-.pcard-banner-bg {
-  position: absolute; inset: -6px;
-  width: calc(100% + 12px); height: calc(100% + 12px);
-  object-fit: cover; filter: blur(8px) brightness(.35) saturate(.5);
-}
-.pcard-banner-fg {
-  position: absolute; inset: 0;
+.pcard-icon-empty {
   display: flex; align-items: center; justify-content: center;
-}
-.pcard-banner-fg img {
-  height: 40px; width: 40px; object-fit: cover;
-  border-radius: 5px; border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 0 2px 10px rgba(0,0,0,.6);
-}
-.pcard-banner-empty {
-  position: absolute; inset: 0;
-  background: linear-gradient(160deg, rgba(0,232,122,.04) 0%, var(--bg2) 100%);
-  display: flex; align-items: center; justify-content: center;
-}
-.pcard-banner-empty::after {
-  content: '◈';
-  font-size: 22px; color: var(--border2);
-  font-family: var(--mono);
+  background: var(--bg2); color: var(--border2);
+  font-size: 12px; font-family: var(--mono);
 }
 /* body */
 .pcard-body { padding: 10px 12px 8px; flex: 1; }
@@ -1176,7 +1158,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 .pcard-bookmark.saved { color: var(--amber); }
 /* featured card */
 .pcard-featured { grid-column: 1 / -1; }
-.pcard-featured .pcard-banner-wrap { height: 100px; }
+.pcard-featured .pcard-icon { width: 32px; height: 32px; }
 .pcard-featured .pcard-q { font-size: 14px; -webkit-line-clamp: 3; }
 .pcard-featured .pcard-odds-pct { font-size: 18px; }
 /* outcome-pill legacy compat */
@@ -2282,27 +2264,25 @@ function buildPraxisCard(m, bookmarks, featured) {
 
   const statusMap = {
     0: '<span class="spill sp-live"><span class="sp-dot"></span>LIVE</span>',
-    2: '<span class="spill sp-proposed">◆ PROPOSED</span>',
-    3: '<span class="spill sp-disputed">⚠ DISPUTED</span>',
-    4: '<span class="spill sp-finalized">✓ FINAL</span>',
-    1: '<span class="spill sp-cancelled">✕ VOID</span>',
+    4: '<span class="spill sp-proposed">◆ PROPOSED</span>',
+    5: '<span class="spill sp-disputed">⚠ DISPUTED</span>',
+    6: '<span class="spill sp-finalized">✓ FINAL</span>',
+    1: '<span class="spill sp-cancelled">✕ CANCELLED</span>',
+    7: '<span class="spill sp-cancelled">✕ VOID</span>',
     8: '<span class="spill sp-expired">⏱ EXPIRED</span>'
   };
   const statusHtml = statusMap[m.status] || '';
 
-  let bannerHtml = '';
+  let iconHtml = '';
   if (typeof extractImg === 'function') {
     const imgUrl = extractImg(m.rules || '');
     if (imgUrl) {
-      bannerHtml = `<div class="pcard-banner-wrap">
-        <img class="pcard-banner-bg" src="${imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>
-        <div class="pcard-banner-fg"><img src="${imgUrl}" alt="" onerror="this.parentElement.style.display='none'"/></div>
-      </div>`;
+      iconHtml = `<img class="pcard-icon" src="${imgUrl}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;pcard-icon pcard-icon-empty&quot;>◈</div>'"/>`;
     } else {
-      bannerHtml = `<div class="pcard-banner-wrap"><div class="pcard-banner-empty"></div></div>`;
+      iconHtml = `<div class="pcard-icon pcard-icon-empty">◈</div>`;
     }
   } else {
-    bannerHtml = `<div class="pcard-banner-wrap"><div class="pcard-banner-empty"></div></div>`;
+    iconHtml = `<div class="pcard-icon pcard-icon-empty">◈</div>`;
   }
 
   const question = (typeof stripCatPrefix === 'function') ? stripCatPrefix(m.question || m.rules || '(no question)') : (m.question || '(no question)');
@@ -2310,9 +2290,9 @@ function buildPraxisCard(m, bookmarks, featured) {
   const qTrunc = esc(question).slice(0, maxLen) + (question.length > maxLen ? '…' : '');
 
   return `<div class="pcard${featured ? ' pcard-featured' : ''}" data-mid="${mid}" onclick="openDetail('${mid}')">
-    ${bannerHtml}
     <div class="pcard-body">
       <div class="pcard-cat">
+        ${iconHtml}
         <span>${catSymbol} ${catName}</span>
         <span style="margin-left:auto">${statusHtml}</span>
       </div>
