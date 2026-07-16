@@ -2220,15 +2220,15 @@ window.renderCurrentTab = function() {
   const cat = window._activeCat || 'all';
   const sort = window._activeSort || 'vol';
 
-  const STATUS_LIVE = 0, STATUS_CANCELLED = 1, STATUS_PROPOSED = 2,
-        STATUS_DISPUTED = 3, STATUS_FINALIZED = 4;
+  const STATUS_LIVE = 0, STATUS_CANCELLED = 1, STATUS_PROPOSED = 4,
+        STATUS_DISPUTED = 5, STATUS_FINALIZED = 6, STATUS_VOIDED = 7, STATUS_EXPIRED = 8;
 
   let markets = [...window._allMarkets];
 
   // Filter by tab
   if (tab === 'live') markets = markets.filter(m => m.status === STATUS_LIVE);
   else if (tab === 'proposed') markets = markets.filter(m => m.status === STATUS_PROPOSED || m.status === STATUS_DISPUTED);
-  else if (tab === 'closed') markets = markets.filter(m => m.status === STATUS_FINALIZED || m.status === STATUS_CANCELLED || m.status === 8);
+  else if (tab === 'closed') markets = markets.filter(m => m.status === STATUS_FINALIZED || m.status === STATUS_CANCELLED || m.status === STATUS_VOIDED || m.status === STATUS_EXPIRED);
 
   // Filter by category
   if (cat !== 'all') {

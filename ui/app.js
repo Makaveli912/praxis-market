@@ -795,6 +795,7 @@ const CLOSED_WINDOW = 20000; // blocks
 
 window.switchTab = function(tab) {
   _activeTab = tab;
+  window._activeTab = tab;
   document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('tab-' + tab);
   if (btn) btn.classList.add('active');
