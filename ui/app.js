@@ -2305,39 +2305,17 @@ window.loadResolvers=async function(){
   if(!el)return;
   el.innerHTML='<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;loading resolvers</div>';
   try{
-    // auto-scan if no cache or registry empty
-    if(!localStorage.getItem('praxis_tx_cache')||_resolverRegistry.size===0){
-      await loadMarkets();
-    }
-    const cache=localStorage.getItem('praxis_tx_cache');
-    if(!cache){el.innerHTML='<div class="alert ay">No chain data — node may be offline</div>';return;}
-    const txs=JSON.parse(cache);
-    const resolvers=new Map();
-    for(const tx of txs){
-      if(tx.messageType!=='register_resolver')continue;
-      const msg=(tx.transaction&&tx.transaction.msg)||{};
-      const addr=tx.sender||'';
-      const stake=BigInt(msg.stakeAmount||msg.stake_amount||0);
-      if(!resolvers.has(addr)){
-        // use rrs from _resolverRegistry if available (already computed in loadMarkets)
-        const regEntry=_resolverRegistry.get(addr);
-        const rrs=regEntry?regEntry.rrs:10;
-        resolvers.set(addr,{addr,stake,proposals:regEntry?regEntry.proposalCount:0,height:tx.height||0,rrs});
-      } else {
-        const r=resolvers.get(addr);
-        r.stake=stake;
-        if((tx.height||0)>r.height)r.height=tx.height;
-      }
-    }
-    for(const tx of txs){
-      if(tx.messageType!=='propose_outcome')continue;
-      const addr=tx.sender||'';
-      if(resolvers.has(addr)&&!_resolverRegistry.has(addr))resolvers.get(addr).proposals++;
-    }
-    if(resolvers.size===0){el.innerHTML='<div class="alert ay">No registered resolvers found</div>';return;}
-    const list=[...resolvers.values()];
-    // if registry has data, rrs already set; otherwise estimate
-    list.forEach(r=>{ if(!_resolverRegistry.has(r.addr)) r.rrs=Math.min(10+r.proposals*10,999); });
+    const resp = await fetch(getPluginRPC() + '/v1/query/resolvers');
+    if(!resp.ok) throw new Error('resolvers query returned ' + resp.status);
+    const raw = await resp.json();
+    if(!raw || raw.length===0){el.innerHTML='<div class="alert ay">No registered resolvers found</div>';return;}
+    const list = raw.map(r => ({
+      addr: r.resolver_address ? b2h(Uint8Array.from(atob(r.resolver_address),c=>c.charCodeAt(0))) : '',
+      stake: BigInt(r.stake_amount||0),
+      proposals: Number(r.successful_resolutions||0),
+      height: Number(r.registered_at||0),
+      rrs: Number(r.rrs_score||0),
+    }));
     list.sort((a,b)=>b.rrs-a.rrs);
     el.innerHTML=list.map(r=>{
       const rrs=r.rrs||0;
@@ -2452,32 +2430,25 @@ window.renderActivityFeed = function(mid) {
   }
 };
 
-window.renderTopHolders = function(mid) {
+window.renderTopHolders = async function(mid) {
   const el = document.getElementById('dpane-holders');
   if(!el||!mid) return;
+  el.innerHTML='<div style="padding:20px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--text3)">Loading holders…</div>';
   try {
-    const txs = JSON.parse(localStorage.getItem('praxis_tx_cache')||'[]');
-    const holders = new Map();
-    for(const tx of txs){
-      if(tx.messageType!=='submit_prediction') continue;
-      const msg=(tx.transaction&&tx.transaction.msg)||{};
-      const rawMid=msg.marketId||msg.market_id||'';
-      let txMid=rawMid;
-      try{txMid=b2h(Uint8Array.from(atob(rawMid),c=>c.charCodeAt(0)));}catch{}
-      if(txMid!==mid) continue;
-      const addr=tx.sender||'';
-      const outcome=msg.outcome===true||msg.outcome==='true'||msg.outcome===1;
-      const shares=BigInt(msg.shares||msg.amount||0);
-      if(!holders.has(addr)) holders.set(addr,{addr,yes:0n,no:0n,txCount:0});
-      const h=holders.get(addr);
-      if(outcome) h.yes+=shares; else h.no+=shares;
-      h.txCount++;
-    }
-    if(!holders.size){
+    const resp = await fetch(getPluginRPC() + '/v1/query/positions?market=' + encodeURIComponent(mid));
+    if(!resp.ok) throw new Error('positions query returned ' + resp.status);
+    const raw = await resp.json();
+    const list = (raw||[]).map(h => ({
+      addr: h.address || '',
+      yes: BigInt(h.sharesYes || 0),
+      no: BigInt(h.sharesNo || 0),
+      txCount: 1,
+    }));
+    if(!list.length){
       el.innerHTML='<div style="padding:20px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--text3)">No positions yet</div>';
       return;
     }
-    const list=[...holders.values()].sort((a,b)=>Number((b.yes+b.no)-(a.yes+a.no)));
+    list.sort((a,b)=>Number((b.yes+b.no)-(a.yes+a.no)));
     const totalYes=list.reduce((s,h)=>s+h.yes,0n);
     const totalNo=list.reduce((s,h)=>s+h.no,0n);
     const grand=totalYes+totalNo;
