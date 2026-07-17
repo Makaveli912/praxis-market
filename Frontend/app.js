@@ -2339,6 +2339,7 @@ window.loadResolvers=async function(){
       rrs: Number(r.rrs_score||0),
     }));
     list.sort((a,b)=>b.rrs-a.rrs);
+    window._resolvers = list;
     el.innerHTML=list.map(r=>{
       const rrs=r.rrs||0;
       let tier,tcolor,ticon;
@@ -2715,17 +2716,6 @@ window.build_rewardProtocol = function() {
     toast('Payload built');
   } catch(e) { toast(friendlyError(null,e.message),true); }
 };
-
-// expose resolvers map for reward page
-const _origBrowseResolvers = window.loadResolvers;
-if (typeof loadResolvers === 'function') {
-  const __orig = loadResolvers;
-  window.loadResolvers = async function() {
-    await __orig();
-    // cache resolvers map reference
-    window._resolvers = resolvers;
-  };
-}
 
 // ═══════════════════════════════════════════
 // SEARCH PAGE
