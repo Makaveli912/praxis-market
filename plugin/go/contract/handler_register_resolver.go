@@ -1,5 +1,7 @@
 package contract
 
+import "bytes"
+
 func (c *Contract) CheckMessageRegisterResolver(msg *MessageRegisterResolver) *PluginCheckResponse {
 if len(msg.ResolverAddress) != 20 {
 return ErrCheckResp(ErrInvalidAddress())
@@ -119,6 +121,17 @@ rawFee, pe := SafeMarshal(feePool)
 if pe != nil { return &PluginDeliverResponse{Error: pe} }
 rawGTreasury, pe := SafeMarshal(gTreasury)
 if pe != nil { return &PluginDeliverResponse{Error: pe} }
+found := false
+for _, a := range ridx.Addresses {
+if bytes.Equal(a, msg.ResolverAddress) {
+found = true
+break
+}
+}
+if !found {
+ridx.Addresses = append(ridx.Addresses, msg.ResolverAddress)
+}
+
 rawRidx, pe := SafeMarshal(ridx)
 if pe != nil { return &PluginDeliverResponse{Error: pe} }
 
