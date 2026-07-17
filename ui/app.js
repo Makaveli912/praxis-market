@@ -849,8 +849,8 @@ window.loadMarkets = async function () {
       const qYes = BigInt(mk.q_yes || 0);
       const qNo  = BigInt(mk.q_no || 0);
       const expiry = BigInt(mk.expiry_time || 0);
-      let status = 0;
-      if (expiry && currentHeight > Number(expiry)) status = 8;
+      let status = (mk.status !== undefined && mk.status !== null) ? Number(mk.status) : 0;
+      if (status === 0 && expiry && currentHeight > Number(expiry)) status = 8;
       // NOTE: resolver-driven states (proposed/finalized/disputed) are not
       // yet exposed by /v1/query/markets — only expiry-based live/closed
       // is derivable here. Extend the plugin response with a status field
