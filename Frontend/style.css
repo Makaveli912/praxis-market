@@ -178,6 +178,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size
 .bal-wrap{padding:16px;background:var(--bg);border:1px solid var(--border);margin-bottom:13px}
 .bal-num{font-family:var(--font-d);font-size:30px;font-weight:900;color:var(--green);line-height:1;margin-bottom:2px}
 .bal-unit{font-family:var(--font-mono);font-size:8px;color:var(--text3);letter-spacing:2px}
+.adv-toggle{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text2);border:1px solid var(--border2);user-select:none;transition:all .12s}
+.adv-toggle:hover{border-color:var(--green);color:var(--green)}
+.adv-body{display:none;margin-top:13px}
+.adv-body.open{display:block}
+.adv-chevron{transition:transform .15s}
+.adv-chevron.open{transform:rotate(180deg)}
 .sinfo{font-family:var(--font-mono);font-size:10px;color:var(--text2);line-height:2}
 .sinfo em{color:var(--green);font-style:normal}
 code{font-family:var(--font-mono);font-size:11px;background:var(--bg2);padding:1px 5px;border:1px solid var(--border);color:var(--cyan)}

@@ -122,21 +122,6 @@ window.connectMetaMaskBLS = async function() {
     const ethAddr = accounts[0].toLowerCase();
     mmEthAddress  = ethAddr;
 
-    // 3. Check if we already have a stored key for this address
-    if (hasStoredKey(ethAddr)) {
-      const stored = await loadStoredKey(ethAddr);
-      if (stored) {
-        mmDerivedPriv = stored;
-        mmDerivedPub  = bls12_381.getPublicKey(stored);
-        const pubHash = await crypto.subtle.digest('SHA-256', mmDerivedPub);
-        mmDerivedAddr = b2h(new Uint8Array(pubHash).slice(0, 20));
-        _applyDerivedKey();
-        updateMMUI(ethAddr);
-        toast('✓ Wallet reconnected — ' + mmDerivedAddr.slice(0,8) + '…');
-        return;
-      }
-    }
-
     // 4. Sign derivation message
     updateMMStatus('Waiting for MetaMask signature…');
     const sig = await window.ethereum.request({
@@ -153,6 +138,7 @@ window.connectMetaMaskBLS = async function() {
 
     // 6. Store encrypted
     await storeKey(ethAddr, privKey);
+    localStorage.setItem('praxis_bls_connected', ethAddr);
 
     // 7. Apply to signer
     _applyDerivedKey();
@@ -208,6 +194,8 @@ function autoFillAddresses(addr) {
 
 // ── Disconnect ──
 window.disconnectMetaMaskBLS = function() {
+  if (mmEthAddress) localStorage.removeItem(PRAXIS_STORE_PREFIX + mmEthAddress);
+  localStorage.removeItem('praxis_bls_connected');
   mmEthAddress  = null;
   mmDerivedPriv = null;
   mmDerivedPub  = null;
@@ -271,9 +259,12 @@ window.addEventListener('load', async () => {
 
   if (!window.ethereum) return;
   try {
+    const lastConnected = localStorage.getItem('praxis_bls_connected');
+    if (!lastConnected) return;
     const accounts = await window.ethereum.request({method:'eth_accounts'});
     if (!accounts.length) return;
     const ethAddr = accounts[0].toLowerCase();
+    if (ethAddr !== lastConnected) return;
     if (!hasStoredKey(ethAddr)) return;
 
     // Silent reconnect — no MetaMask popup

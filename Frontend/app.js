@@ -195,7 +195,7 @@ window.showPage=function(id,btn){
   document.querySelectorAll('#bnav .btab').forEach(b=>b.classList.remove('active'));
   const bm=document.querySelector(`#bnav [data-p="${id}"]`);if(bm)bm.classList.add('active');
   if(id==='markets')loadMarkets();
-  if(id==='wallet'){refreshBalance();loadMyPredictions();}
+  if(id==='profile'){refreshBalance();loadMyPredictions();}
   if(id==='create'){updateCreateBreakdown();setTimeout(initExpiryDate,50);}
   if(id==='predict')updatePredictBreakdown();
   if(id==='resolvers')loadResolvers();

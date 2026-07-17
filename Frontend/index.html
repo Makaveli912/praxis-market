@@ -1283,8 +1283,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     <div class="ni" data-p="reward-protocol"  onclick="showPage('reward-protocol',this)"><span class="ni-ic">⚙</span>Protocol Rewards</div>
 
     <div class="ns">Account</div>
-    <div class="ni" data-p="wallet" onclick="showPage('wallet',this)"><span class="ni-ic">◫</span>Wallet</div>
-    <div class="ni" data-p="signer" onclick="showPage('signer',this)"><span class="ni-ic">◉</span>Signer</div>
+    <div class="ni" data-p="profile" onclick="showPage('profile',this)"><span class="ni-ic">◫</span>Profile</div>
 
     <div class="ns" id="nav-resolver-section" style="display:none">Resolver</div>
     <div class="ni nav-resolver-item" data-p="register"       onclick="showPage('register',this)"       style="display:none"><span class="ni-ic">◈</span>Register<span class="rb rb-r">Resolver</span></div>
@@ -1340,9 +1339,9 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     <span class="btab-icon">⌕</span>
     <span>Search</span>
   </button>
-  <button class="btab" data-p="wallet" onclick="showPage('wallet',this)">
+  <button class="btab" data-p="profile" onclick="showPage('profile',this)">
     <span class="btab-icon">◫</span>
-    <span>Wallet</span>
+    <span>Profile</span>
   </button>
   <button class="btab" id="btab-more" onclick="openNav()">
     <span class="btab-icon">≡</span>
@@ -1671,47 +1670,8 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 </div>
 
 <!-- ── WALLET ── -->
-<div class="page" id="page-wallet">
-  <div class="ph ph-g"><div class="ph-eye">Account</div><div class="ph-title">Wallet</div><div class="ph-sub">Check balances, send $PRX, and view your predictions</div></div>
-  <div class="card" id="mm_card"><div class="ci">
-    <div class="ct">// metamask_identity</div>
-    <div id="mm_disconnected">
-      <div class="sinfo" style="margin-bottom:12px">Connect MetaMask to verify your identity. Your BLS keystore handles transaction signing.</div>
-      <div class="brow"><button class="btn bp" onclick="connectMetaMask()">🦊 Connect MetaMask</button></div>
-    </div>
-    <div id="mm_connected" style="display:none">
-      <div class="kstat loaded" id="mm_status">✓ connected</div>
-      <div class="field" style="margin-top:10px"><label>ETH Address</label><div class="addr-mono" id="mm_addr" style="color:var(--green)"></div></div>
-      <div class="brow" style="margin-top:10px"><button class="btn bsec" onclick="disconnectMetaMask()">Disconnect</button></div>
-    </div>
-  </div></div>
-  <div class="card"><div class="ci">
-    <div class="ct">// balance_lookup</div>
-    <div class="field"><label>Address (40 hex)</label><input id="w_addr" type="text" placeholder="e7c7dad1…"/></div>
-    <div class="brow"><button class="btn bp" onclick="queryAccount()">Query Balance</button></div>
-    <div id="w_result" style="display:none;margin-top:15px">
-      <div class="bal-wrap"><div class="bal-num" id="w_balance">0</div><div class="bal-unit">$PRX LIQUID</div></div>
-      <div class="addr-mono" id="w_addrD"></div>
-    </div>
-  </div></div>
-  <div class="card"><div class="ci">
-    <div class="ct">// send_prx</div>
-    <div class="r2"><div class="field"><label>From Address</label><input id="s_from" type="text" placeholder="40 hex chars"/></div><div class="field"><label>To Address</label><input id="s_to" type="text" placeholder="40 hex chars"/></div></div>
-    <div class="r2"><div class="field"><label>Amount (PRX)</label><input id="s_amount" type="number" value="1"/></div><div class="field"><label>Fee (uPRX)</label><input id="s_fee" type="number" value="10000"/></div></div>
-    <div class="brow"><button class="btn bp" id="btn_send" onclick="signAndSubmit_send()">⚡ Send $PRX</button><button class="btn bsec" onclick="build_send()">Build Payload</button></div>
-    <div class="pend" id="pend_send"><span class="blink">▪▪▪</span> broadcasting…</div>
-    <div class="pbox" id="so"><div class="plbl">// unsigned_payload</div><textarea id="sp" readonly></textarea></div>
-  </div></div>
-  <div class="card"><div class="ci">
-    <div class="ct">// my_predictions</div>
-    <div id="myPredictions"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Load wallet to see predictions</div></div>
-  </div></div>
-</div>
-
-<!-- ── SIGNER ── -->
-<div class="page" id="page-signer">
-  <div class="ph ph-g"><div class="ph-eye">BLS12-381</div><div class="ph-title">Signer</div><div class="ph-sub">Encrypted keystore — private key held in RAM only, never stored or sent</div></div>
-
+<div class="page" id="page-profile">
+  <div class="ph ph-g"><div class="ph-eye">Account</div><div class="ph-title">Profile</div><div class="ph-sub">Your identity, keys, and activity on Praxis</div></div>
 
   <div class="card"><div class="ci">
     <div class="ct">// connect_wallet — recommended</div>
@@ -1720,7 +1680,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
       <div class="brow"><button class="btn bp" id="mm-connect-btn" onclick="connectMetaMaskBLS()">🦊 Connect Wallet</button></div>
     </div>
     <div id="mm_connected" style="display:none">
-      <div class="kstat loaded" id="mm_status">&#x2713; connected</div>
+      <div class="kstat loaded" id="mm_status">✓ connected</div>
       <div class="field" style="margin-top:10px"><label>ETH Address</label><div class="addr-mono" id="mm_addr" style="color:var(--green)"></div></div>
       <div class="field" style="margin-top:8px"><label>Praxis Address (derived)</label><div class="addr-mono" id="mm_praxis_addr" style="color:var(--cyan)"></div></div>
       <div class="brow" style="margin-top:10px"><button class="btn bsec" onclick="disconnectMetaMaskBLS()">Disconnect</button></div>
@@ -1737,66 +1697,102 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     </div>
   </div></div>
 
-  <div class="card" id="ks_quick_wrap" style="display:none"><div class="ci">
-    <div class="ct">// quick_unlock</div>
-    <div class="alert ag" style="margin-bottom:12px">Saved keystore detected — enter password to restore session.</div>
-    <div class="field">
-      <label>Account</label>
-      <div class="addr-mono" id="ks_quick_addr" style="color:var(--green);font-size:12px"></div>
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input id="ks_quick_pw" type="password" placeholder="Keystore password…"/>
-    </div>
-    <div class="brow">
-      <button class="btn bp" onclick="quickUnlock()">⚡ Quick Unlock</button>
-      <button class="btn bsec" onclick="localStorage.removeItem('praxis_keystore');checkSavedKeystore();toast('Saved keystore cleared')">Forget</button>
+  <div class="card"><div class="ci">
+    <div class="ct">// balance_lookup</div>
+    <div class="field"><label>Address (40 hex)</label><input id="w_addr" type="text" placeholder="e7c7dad1…"/></div>
+    <div class="brow"><button class="btn bp" onclick="queryAccount()">Query Balance</button></div>
+    <div id="w_result" style="display:none;margin-top:15px">
+      <div class="bal-wrap" style="display:flex;align-items:center;gap:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--bg2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;color:var(--green);flex-shrink:0">PRX</div>
+        <div>
+          <div class="bal-num" id="w_balance">0</div>
+          <div class="bal-unit">$PRX LIQUID</div>
+        </div>
+      </div>
+      <div class="addr-mono" id="w_addrD"></div>
     </div>
   </div></div>
 
   <div class="card"><div class="ci">
-    <div class="ct">// import_keystore</div>
-    <div class="field">
-      <label>Keystore File (.json)</label>
-      <input id="ks_imp_file" type="file" accept=".json"/>
-      <div class="hint">Upload your encrypted Praxis keystore JSON</div>
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input id="ks_imp_pw" type="password" placeholder="Keystore password…"/>
-    </div>
-    <div class="brow">
-      <button class="btn bp" onclick="importKeystore()">🔓 Unlock Keystore</button>
-      <button class="btn bsec" onclick="clearKey()">Clear</button>
-    </div>
+    <div class="ct">// send_prx</div>
+    <div class="r2"><div class="field"><label>From Address</label><input id="s_from" type="text" placeholder="40 hex chars"/></div><div class="field"><label>To Address</label><input id="s_to" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Amount (PRX)</label><input id="s_amount" type="number" value="1"/></div><div class="field"><label>Fee (uPRX)</label><input id="s_fee" type="number" value="10000"/></div></div>
+    <div class="brow"><button class="btn bp" id="btn_send" onclick="signAndSubmit_send()">⚡ Send $PRX</button><button class="btn bsec" onclick="build_send()">Build Payload</button></div>
+    <div class="pend" id="pend_send"><span class="blink">▪▪▪</span> broadcasting…</div>
+    <div class="pbox" id="so"><div class="plbl">// unsigned_payload</div><textarea id="sp" readonly></textarea></div>
   </div></div>
 
   <div class="card"><div class="ci">
-    <div class="ct">// create_keystore</div>
-    <div class="alert ay" style="margin-bottom:12px">Generates a new BLS12-381 keypair and downloads an encrypted keystore file.</div>
-    <div class="field">
-      <label>Password</label>
-      <input id="ks_new_pw" type="password" placeholder="Choose a strong password…"/>
-    </div>
-    <div class="field">
-      <label>Confirm Password</label>
-      <input id="ks_new_pw2" type="password" placeholder="Confirm password…"/>
-    </div>
-    <div class="brow">
-      <button class="btn bp" onclick="createKeystore()">⚙ Generate &amp; Download</button>
-    </div>
+    <div class="ct">// my_predictions</div>
+    <div id="myPredictions"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Load wallet to see predictions</div></div>
   </div></div>
 
-  <div class="card"><div class="ci">
-    <div class="ct">// signing_spec</div>
-    <div class="sinfo">
-      1. sign_bytes = proto.Marshal(Transaction{…, <em>signature:nil</em>})<br>
-      2. time = <em>BigInt(Date.now()) × 1000n</em> — microseconds<br>
-      3. BLS12-381 <em>G2 signature (96 bytes)</em> — @noble/curves<br>
-      4. address = <em>SHA256(pubKey).slice(0,20)</em><br>
-      5. Keystore = <em>AES-GCM + PBKDF2 (200k iterations)</em>
-    </div>
-  </div></div>
+  <div class="adv-toggle" onclick="document.getElementById('adv-body').classList.toggle('open');this.querySelector('.adv-chevron').classList.toggle('open')">
+    <span>Advanced — Manual Keystore</span>
+    <span class="adv-chevron">▼</span>
+  </div>
+  <div class="adv-body" id="adv-body">
+    <div class="card" id="ks_quick_wrap" style="display:none"><div class="ci">
+      <div class="ct">// quick_unlock</div>
+      <div class="alert ag" style="margin-bottom:12px">Saved keystore detected — enter password to restore session.</div>
+      <div class="field">
+        <label>Account</label>
+        <div class="addr-mono" id="ks_quick_addr" style="color:var(--green);font-size:12px"></div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="ks_quick_pw" type="password" placeholder="Keystore password…"/>
+      </div>
+      <div class="brow">
+        <button class="btn bp" onclick="quickUnlock()">⚡ Quick Unlock</button>
+        <button class="btn bsec" onclick="localStorage.removeItem('praxis_keystore');checkSavedKeystore();toast('Saved keystore cleared')">Forget</button>
+      </div>
+    </div></div>
+
+    <div class="card"><div class="ci">
+      <div class="ct">// import_keystore</div>
+      <div class="field">
+        <label>Keystore File (.json)</label>
+        <input id="ks_imp_file" type="file" accept=".json"/>
+        <div class="hint">Upload your encrypted Praxis keystore JSON</div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="ks_imp_pw" type="password" placeholder="Keystore password…"/>
+      </div>
+      <div class="brow">
+        <button class="btn bp" onclick="importKeystore()">🔓 Unlock Keystore</button>
+        <button class="btn bsec" onclick="clearKey()">Clear</button>
+      </div>
+    </div></div>
+
+    <div class="card"><div class="ci">
+      <div class="ct">// create_keystore</div>
+      <div class="alert ay" style="margin-bottom:12px">Generates a new BLS12-381 keypair and downloads an encrypted keystore file.</div>
+      <div class="field">
+        <label>Password</label>
+        <input id="ks_new_pw" type="password" placeholder="Choose a strong password…"/>
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <input id="ks_new_pw2" type="password" placeholder="Confirm password…"/>
+      </div>
+      <div class="brow">
+        <button class="btn bp" onclick="createKeystore()">⚙ Generate &amp; Download</button>
+      </div>
+    </div></div>
+
+    <div class="card"><div class="ci">
+      <div class="ct">// signing_spec</div>
+      <div class="sinfo">
+        1. sign_bytes = proto.Marshal(Transaction{…, <em>signature:nil</em>})<br>
+        2. time = <em>BigInt(Date.now()) × 1000n</em> — microseconds<br>
+        3. BLS12-381 <em>G2 signature (96 bytes)</em> — @noble/curves<br>
+        4. address = <em>SHA256(pubKey).slice(0,20)</em><br>
+        5. Keystore = <em>AES-GCM + PBKDF2 (200k iterations)</em>
+      </div>
+    </div></div>
+  </div>
 </div>
 
 <!-- ── RESOLVER PAGES (same forms, new styling) ── -->
