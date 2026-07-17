@@ -674,14 +674,6 @@ window.showDetail = function(marketId) {
   const statusClasses = {0:'sp-o',1:'sp-d',2:'sp-f',3:'sp-e',4:'sp-e',5:'sp-d',6:'sp-f',7:'sp-e',8:'sp-e'};
   document.getElementById('det-status-pill').innerHTML = '<div class="spill ' + (statusClasses[m.status]||'sp-f') + '"><span class="dot"></span>' + (statusLabels[m.status]||'Closed') + '</div>';
 
-  const yesBtn = document.getElementById('det-bet-yes');
-  const noBtn = document.getElementById('det-bet-no');
-  if (open) {
-    yesBtn.removeAttribute('disabled'); yesBtn.setAttribute('onclick', 'fillP(' + JSON.stringify(mid) + ', true)');
-    noBtn.removeAttribute('disabled');  noBtn.setAttribute('onclick', 'fillP(' + JSON.stringify(mid) + ', false)');
-  } else {
-    yesBtn.setAttribute('disabled',''); noBtn.setAttribute('disabled','');
-  }
 
   const proposeBtn = document.getElementById('det-propose-btn');
   const claimBtn   = document.getElementById('det-claim-btn');
