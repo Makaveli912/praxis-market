@@ -784,6 +784,7 @@ window.showDetail = function(marketId) {
   }
 
   _detailMarketId = mid;
+  const _pmidEl = document.getElementById('p_mid'); if (_pmidEl) _pmidEl.value = mid;
   showPage('detail', null);
   setTimeout(()=>switchDetailTab('activity'), 50);
 };
@@ -792,7 +793,6 @@ window.openDetail = window.showDetail;
 window.fillP = (id, outcome) => {
   document.getElementById('p_mid').value = id;
   if (outcome !== undefined) { setOut(outcome); }
-  showPage('predict', null);
 };
 window.fillC = id => { document.getElementById('cl_mid').value = id; showPage('claim', null); };
 

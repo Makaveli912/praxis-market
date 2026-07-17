@@ -1269,7 +1269,6 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="nav">
     <div class="ns">Markets</div>
     <div class="ni active" data-p="markets"   onclick="showPage('markets',this)">  <span class="ni-ic">◈</span>Browse Markets</div>
-    <div class="ni" data-p="predict"   onclick="showPage('predict',this)">  <span class="ni-ic">⚡</span>Submit Prediction</div>
     <div class="ni" data-p="claim"     onclick="showPage('claim',this)">    <span class="ni-ic">◎</span>Claim Winnings</div>
     <div class="ni" data-p="reclaim"   onclick="showPage('reclaim',this)">  <span class="ni-ic">◈</span>Reclaim Stake</div>
     <div class="ni" data-p="resolvers" onclick="showPage('resolvers',this)"><span class="ni-ic">◈</span>Browse Resolvers</div>
@@ -1561,9 +1560,18 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 
       <!-- ACTION BUTTONS -->
       <div class="det-action-card" style="padding:12px;display:flex;flex-direction:column;gap:8px">
-        <button class="det-submit-btn" id="det-place-bet" style="width:100%" onclick="fillP(this.getAttribute('data-mid')||window._detailMarketId, true)">⚡ Place Bet</button>
-        <button class="det-submit-btn" id="det-bet-yes" onclick="" style="display:none"></button>
-        <button class="det-submit-btn det-submit-no" id="det-bet-no" onclick="" style="display:none"></button>
+        <input id="p_mid" type="hidden"/>
+        <div class="field" style="margin:0 0 8px"><label>Bettor Address</label><input id="p_bettor" type="text" placeholder="40 hex chars" oninput="checkPositionCap()"/></div>
+        <div class="field" style="margin:0 0 8px"><label>Outcome</label><div class="otog"><div class="obtn yes active" id="btn_yes" onclick="setOut(true)">YES</div><div class="obtn no" id="btn_no" onclick="setOut(false)">NO</div></div></div>
+        <div class="field" style="margin:0 0 8px"><label>Shares (PRX)</label><input id="p_shares" type="number" value="1" oninput="updatePredictBreakdown()"/><div class="hint">Min 1 PRX</div></div>
+        <div class="field" style="margin:0 0 8px"><label>Slippage <span id="p_slip_lbl" style="color:var(--green);font-size:10px">5.0%</span></label><input id="p_slippage" type="range" min="1" max="10" step="0.5" value="5" oninput="updatePredictBreakdown()" style="width:100%;accent-color:var(--green)"/></div>
+        <div class="field" style="margin:0 0 8px"><label>Max Cost (PRX)</label><input id="p_maxcost" type="number" value="100" readonly style="opacity:.6"/></div>
+        <div class="field" style="margin:0 0 8px"><label>Fee (uPRX)</label><input id="p_fee" type="number" value="10000"/></div>
+        <div id="predict_breakdown" class="breakdown"></div>
+        <div id="cap_indicator"></div>
+        <button class="det-submit-btn" id="btn_predict" style="width:100%" onclick="signAndSubmit_predict()">⚡ Sign &amp; Submit</button>
+        <div class="pend" id="pend_predict"><span class="blink">▪▪▪</span> broadcasting…</div>
+        <div class="pbox" id="po"><div class="plbl">// unsigned_payload</div><textarea id="pp" readonly></textarea></div>
         <button class="btn bamb bsm" id="det-forfeit-btn"  style="display:none;width:100%" onclick="">↩ Forfeit Position</button>
         <button class="btn bsec bsm" id="det-propose-btn"  style="display:none;width:100%" onclick="">⚖ Propose Outcome</button>
         <button class="btn bp   bsm" id="det-claim-btn"    style="display:none;width:100%" onclick="">◎ Claim Winnings</button>
@@ -1599,27 +1607,6 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     <div class="brow"><button class="btn bp" id="btn_forfeit" onclick="signAndSubmit_forfeit()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_forfeit()">Build Payload</button></div>
     <div class="pend" id="pend_forfeit"><span class="blink">▪▪▪</span> broadcasting…</div>
     <div class="pbox" id="foo"><div class="plbl">// unsigned_payload</div><textarea id="fop" readonly></textarea></div>
-  </div></div>
-</div>
-
-<!-- ── PREDICT ── -->
-<div class="page" id="page-predict">
-  <div class="ph ph-g"><div class="ph-eye">Place Bet</div><div class="ph-title">Submit Prediction</div><div class="ph-sub">Buy YES or NO shares — cost determined by LMSR pricing</div></div>
-  <div class="card"><div class="ci">
-    <div class="ct">// prediction_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="p_mid" type="text" placeholder="40 hex chars" oninput="checkPositionCap()"/></div><div class="field"><label>Bettor Address</label><input id="p_bettor" type="text" placeholder="40 hex chars" oninput="checkPositionCap()"/></div></div>
-    <div class="field"><label>Outcome</label><div class="otog"><div class="obtn yes active" id="btn_yes" onclick="setOut(true)">YES</div><div class="obtn no" id="btn_no" onclick="setOut(false)">NO</div></div></div>
-    <div class="r3">
-      <div class="field"><label>Shares (PRX)</label><input id="p_shares" type="number" value="1" oninput="updatePredictBreakdown()"/><div class="hint">Min 1 PRX</div></div>
-      <div class="field"><label>Slippage <span id="p_slip_lbl" style="color:var(--green);font-size:10px">5.0%</span></label><input id="p_slippage" type="range" min="1" max="10" step="0.5" value="5" oninput="updatePredictBreakdown()" style="width:100%;accent-color:var(--green)"/><div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--text3)"><span>1%</span><span>10%</span></div></div>
-      <div class="field"><label>Max Cost (PRX)</label><input id="p_maxcost" type="number" value="100" readonly style="opacity:.6"/></div>
-    </div>
-    <div class="field"><label>Fee (uPRX)</label><input id="p_fee" type="number" value="10000"/></div>
-    <div id="predict_breakdown" class="breakdown"></div>
-    <div id="cap_indicator"></div>
-    <div class="brow"><button class="btn bp" id="btn_predict" onclick="signAndSubmit_predict()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_predict()">Build Payload</button></div>
-    <div class="pend" id="pend_predict"><span class="blink">▪▪▪</span> broadcasting…</div>
-    <div class="pbox" id="po"><div class="plbl">// unsigned_payload</div><textarea id="pp" readonly></textarea></div>
   </div></div>
 </div>
 
