@@ -2163,6 +2163,16 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 </div>
 
 <div id="toast"></div>
+<script type="module">
+let bls12_381 = null;
+(async () => {
+  for (const url of ['https://esm.sh/@noble/curves@1.4.2/bls12-381','https://cdn.skypack.dev/@noble/curves@1.4.2/bls12-381']) {
+    try { const m = await import(url); bls12_381 = m.bls12_381; break; } catch {}
+  }
+  if (!bls12_381) toast('BLS library failed to load — check internet', true);
+})();
+</script>
+
 <script src="metamask-auth.js"></script>
 <script src="app.js"></script>
 <script>
