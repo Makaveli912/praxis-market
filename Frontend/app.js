@@ -2860,24 +2860,6 @@ window.renderHoldersSidebar = function(mid, side) {
   } catch(e) { el.innerHTML = '<div class="det-holders-empty">No holders yet</div>'; }
 };
 
-window.srchCat = function(el) {
-  document.querySelectorAll('#srch-cats .cpick').forEach(e => e.classList.remove('active'));
-  el.classList.add('active');
-  runSearch();
-};
-
-window.runSearch = function() {
-  const q = (document.getElementById('srch-input')?.value || '').toLowerCase().trim();
-  const cat = document.querySelector('#srch-cats .cpick.active')?.getAttribute('data-cat') || 'all';
-  const el = document.getElementById('srch-results');
-  if (!el) return;
-  let results = _allMarkets || [];
-  if (q) results = results.filter(m => (m.question||'').toLowerCase().includes(q) || (m.marketId||'').toLowerCase().includes(q));
-  if (cat && cat !== 'all') results = results.filter(m => extractCat(m.rules||'') === cat);
-  if (!results.length) { el.innerHTML = '<div style="color:var(--text3);font-family:var(--mono);font-size:11px;text-align:center;padding:40px 0">No markets found</div>'; return; }
-  el.innerHTML = renderMarketCards(results);
-};
-
 // Live ticker
 window.updateTicker = function() {
   const track = document.getElementById('tickerTrack');
