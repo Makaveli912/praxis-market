@@ -2737,51 +2737,6 @@ window.applySortAndRender = function() {
   if (el) el.innerHTML = renderMarketCards(markets);
 };
 
-window.selectDetailOut = function(isYes) {
-  window._detOutcome = isYes;
-  document.getElementById('dout-yes')?.classList.toggle('active', isYes);
-  document.getElementById('dout-no')?.classList.toggle('active', !isYes);
-  const submitBtn = document.getElementById('det-bet-yes');
-  const submitBtnNo = document.getElementById('det-bet-no');
-  const lbl = document.getElementById('det-submit-lbl');
-  const amt = document.getElementById('det-amt')?.value || '100';
-  if (submitBtn) { submitBtn.style.display = isYes ? 'block' : 'none'; }
-  if (submitBtnNo) { submitBtnNo.style.display = !isYes ? 'block' : 'none'; }
-  if (lbl) lbl.textContent = amt + ' PRX';
-  updateDetTrade();
-};
-
-window.updateDetTrade = function() {
-  const amt = parseFloat(document.getElementById('det-amt')?.value || 100);
-  const sharesEl = document.getElementById('det-ts-shares');
-  const priceEl  = document.getElementById('det-ts-price');
-  const winEl    = document.getElementById('det-ts-win');
-  const lblEl    = document.getElementById('det-submit-lbl');
-  const lblNoEl  = document.getElementById('det-submit-lbl-no');
-  if (sharesEl) sharesEl.textContent = (amt * 0.98).toFixed(2);
-  if (priceEl)  priceEl.textContent  = ((window._detOutcome ? 54 : 46) / 100).toFixed(2) + '¢';
-  if (winEl)    winEl.textContent    = (amt * 1.85).toFixed(2) + ' PRX';
-  if (lblEl)    lblEl.textContent    = amt + ' PRX';
-  if (lblNoEl)  lblNoEl.textContent  = amt + ' PRX';
-};
-
-window.detAmtStep = function(step) {
-  const inp = document.getElementById('det-amt');
-  if (!inp) return;
-  inp.value = Math.max(1, parseFloat(inp.value||100) + step);
-  updateDetTrade();
-};
-
-window.setDetAmt = function(amt) {
-  const inp = document.getElementById('det-amt');
-  if (inp) { inp.value = amt; updateDetTrade(); }
-};
-
-window.switchActionTab = function(tab) {
-  document.getElementById('dact-buy')?.classList.toggle('active', tab==='buy');
-  document.getElementById('dact-sell')?.classList.toggle('active', tab==='sell');
-};
-
 window.setHolderTab = function(side, el) {
   document.querySelectorAll('.det-htab').forEach(b => b.classList.remove('active'));
   el?.classList.add('active');

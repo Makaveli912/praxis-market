@@ -2420,115 +2420,6 @@ window.renderDetailInfo = function(mid) {
     rulesRow.style.display = 'none';
   }
 };
-
-// ── Action tab (Buy / Sell) ──
-window._detActionTab = 'buy';
-window.switchActionTab = function(tab) {
-  window._detActionTab = tab;
-  ['buy','sell'].forEach(t => {
-    const b = document.getElementById('dact-' + t);
-    if (b) b.classList.toggle('active', t === tab);
-  });
-  updateDetTrade();
-};
-
-// ── Outcome selector (detail panel) ──
-window._detOutcome = true; // true = YES
-window.selectDetailOut = function(isYes) {
-  window._detOutcome = isYes;
-  document.getElementById('dout-yes').classList.toggle('active',  isYes);
-  document.getElementById('dout-no') .classList.toggle('active', !isYes);
-  const submitBtn = document.getElementById('det-bet-yes');
-  const submitNo  = document.getElementById('det-bet-no');
-  const lbl = document.getElementById('det-submit-lbl');
-  const lbl2= document.getElementById('det-submit-lbl-no');
-  const amt = parseInt(document.getElementById('det-amt')?.value || 100);
-  if (submitBtn) {
-    if (isYes) {
-      submitBtn.style.display = 'block';
-      submitBtn.className = 'det-submit-btn';
-      submitBtn.childNodes[0].textContent = 'Buy YES — ';
-    } else {
-      submitBtn.style.display = 'none';
-    }
-  }
-  if (submitNo) submitNo.style.display = isYes ? 'none' : 'block';
-  updateDetTrade();
-};
-
-// ── Amount helpers ──
-window.detAmtStep = function(delta) {
-  const el = document.getElementById('det-amt');
-  if (!el) return;
-  const v = Math.max(1, (parseInt(el.value) || 100) + delta);
-  el.value = v;
-  updateDetTrade();
-};
-window.setDetAmt = function(val) {
-  const el = document.getElementById('det-amt');
-  if (el) { el.value = val; updateDetTrade(); }
-};
-
-// ── LMSR cost estimate (simplified) ──
-function lmsrEstimate(qYes, qNo, shares, isYes) {
-  try {
-    const b = Number(qYes + qNo) / 2;
-    if (b <= 0) return { cost: shares, avgPrice: 0.5 };
-    const q1 = isYes ? Number(qYes) : Number(qNo);
-    const q2 = isYes ? Number(qNo) : Number(qYes);
-    const before = b * Math.log(Math.exp(q1/b) + Math.exp(q2/b));
-    const after  = b * Math.log(Math.exp((q1+shares)/b) + Math.exp(q2/b));
-    const cost = after - before;
-    const pAfter = Math.exp((q1+shares)/b) / (Math.exp((q1+shares)/b) + Math.exp(q2/b));
-    const toWin = shares * (1/pAfter);
-    return { cost: Math.max(cost, 0), avgPrice: pAfter, toWin };
-  } catch { return { cost: shares, avgPrice: 0.5, toWin: shares * 2 }; }
-}
-
-window.updateDetTrade = function() {
-  if (!window._allMarkets || !window._detailMarketId) return;
-  const m = window._allMarkets.find(x => x.marketId === window._detailMarketId || x.txHash === window._detailMarketId);
-  const amt = parseInt(document.getElementById('det-amt')?.value || 100);
-  const amtU = amt * 1_000_000;
-  const isYes = window._detOutcome !== false;
-
-  const sharesEl = document.getElementById('det-ts-shares');
-  const priceEl  = document.getElementById('det-ts-price');
-  const winEl    = document.getElementById('det-ts-win');
-  const btnLbl   = document.getElementById('det-submit-lbl');
-  const btnLblNo = document.getElementById('det-submit-lbl-no');
-  const activeBtn = isYes ? document.getElementById('det-bet-yes') : document.getElementById('det-bet-no');
-
-  if (!m || m.status !== 0) {
-    if (sharesEl) sharesEl.textContent = '—';
-    if (priceEl)  priceEl.textContent = '—';
-    if (winEl)    winEl.textContent = '—';
-    return;
-  }
-
-  const est = lmsrEstimate(Number(m.qYes), Number(m.qNo), amtU, isYes);
-  const estShares = fmtPRX ? fmtPRX(Math.round(est.cost)) : (Math.round(est.cost/1e6)) + ' PRX';
-  const pct = Math.round(est.avgPrice * 100);
-  const toWinPRX = est.toWin ? fmtPRX(Math.round(est.toWin)) : '—';
-  const profitPct = est.cost > 0 ? Math.round(((est.toWin - est.cost) / est.cost) * 100) : 0;
-
-  if (sharesEl) sharesEl.textContent = fmtPRX ? fmtPRX(amtU) + ' PRX' : amt + ' PRX';
-  if (priceEl)  priceEl.textContent = pct + '¢';
-  if (winEl) {
-    winEl.textContent = toWinPRX + ' PRX (+' + profitPct + '%)';
-    winEl.className = 'det-ts-val g';
-  }
-  const lbl = amt + ' PRX';
-  if (btnLbl)   btnLbl.textContent  = lbl;
-  if (btnLblNo) btnLblNo.textContent = lbl;
-
-  // wire onclick
-  if (activeBtn) {
-    activeBtn.setAttribute('onclick', 'fillP(' + JSON.stringify(window._detailMarketId) + ',' + isYes + ')');
-  }
-};
-
-// ── Holder tab switcher ──
 window._holderTab = 'yes';
 window.setHolderTab = function(side, btn) {
   window._holderTab = side;
@@ -2751,33 +2642,7 @@ window.showDetail = function(mid) {
     const total = (m.qYes || 0n) + (m.qNo || 0n);
     const yesPct = total > 0n ? Number(m.qYes * 100n / total) : 50;
     const noPct  = 100 - yesPct;
-    const yPctEl = document.getElementById('dout-yes-pct');
-    const nPctEl = document.getElementById('dout-no-pct');
-    if (yPctEl) yPctEl.textContent = yesPct + '¢';
-    if (nPctEl) nPctEl.textContent = noPct + '¢';
-
-    // Init trade calc
     window._detailMarketId = mid;
-    window._detOutcome = true;
-    // det-bet-yes/det-bet-no: legacy inline-buy buttons, superseded by det-place-bet.
-    // Left hidden — no supporting outcome-toggle UI (dout-yes/dout-no) exists in markup anymore.
-    document.getElementById('det-bet-yes') && (document.getElementById('det-bet-yes').style.display = 'none');
-    document.getElementById('det-bet-no')  && (document.getElementById('det-bet-no').style.display  = 'none');
-    updateDetTrade();
-
-    // Disable trade panel if not open
-    const outcomeRow = document.getElementById('det-outcome-btns');
-    const submitBtn  = document.getElementById('det-bet-yes');
-    const amtBlock   = document.querySelector('.det-amount-block');
-    if (m.status !== 0) {
-      if (outcomeRow) outcomeRow.style.opacity = '.4';
-      if (submitBtn)  { submitBtn.disabled = true; submitBtn.textContent = 'Market Closed'; }
-      if (amtBlock)   amtBlock.style.pointerEvents = 'none';
-    } else {
-      if (outcomeRow) outcomeRow.style.opacity = '1';
-      if (submitBtn)  submitBtn.disabled = false;
-      if (amtBlock)   amtBlock.style.pointerEvents = '';
-    }
   }
 
   // Render chart + holders sidebar
