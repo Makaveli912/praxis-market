@@ -200,9 +200,10 @@ window.showPage=function(id,btn){
   if(id==='predict')updatePredictBreakdown();
   if(id==='resolvers')loadResolvers();
   closeNav();
+  setTimeout(wireCopyBtns, 50);
 };
 
-// ═══════════════════════════════════════════
+// ═════════════════════════════════════════════
 // MOBILE NAV
 // ═══════════════════════════════════════════
 window.openNav=function(){document.getElementById('deskNav').classList.add('open');document.getElementById('mobNav').classList.add('open');};window.closeNav=function(e){if(!e||e.target===document.getElementById('mobNav')||e.currentTarget===document.getElementById('mobNav')){document.getElementById('deskNav').classList.remove('open');document.getElementById('mobNav').classList.remove('open');}};
@@ -261,10 +262,14 @@ window.checkRPC=async function(){
     const sh=document.getElementById('sb_h');if(sh)sh.textContent=currentHeight;
     updateExpiryFromDate();
     const nonceEl=document.getElementById('c_nonce');if(nonceEl&&!nonceEl.value)nonceEl.value=BigInt(Date.now())*1000n;
+    const ob=document.getElementById('offBanner');if(ob)ob.classList.remove('show');
+    return true;
   }catch{
     ['rpcDot','rpcDotM'].forEach(id=>{const e=document.getElementById(id);if(e)e.className='dot';});
     const el=document.getElementById('rpcStatus');if(el)el.textContent='offline';
     const ns=document.getElementById('ni_status');if(ns)ns.textContent='offline';
+    const ob=document.getElementById('offBanner');if(ob)ob.classList.add('show');
+    return false;
   }
 };
 window.applyHost=function(){const h=document.getElementById('ni_host').value.trim();if(h)localStorage.setItem('praxis_rpc_host',h);checkRPC();toast('Connecting to '+h+'…');};
@@ -302,7 +307,16 @@ window.loadKey=async function(){
     refreshBalance();
     loadMyPredictions();
     toast('Key loaded — '+signerAddress);
-  }catch(e){signerPrivKey=signerPubKey=signerAddress=null;toast('Key load failed: '+e.message,true);}
+    const badge=document.getElementById('sessBadge');
+    if(badge)badge.classList.remove('hidden');
+    injectKeyboardCopyBtns();
+    setTimeout(wireCopyBtns, 100);
+    return true;
+  }catch(e){
+    signerPrivKey=signerPubKey=signerAddress=null;
+    toast('Key load failed: '+e.message,true);
+    return false;
+  }
 };
 window.clearKey=function(){
   localStorage.removeItem('praxis_keystore');
@@ -312,9 +326,11 @@ window.clearKey=function(){
   document.getElementById('sk_derived').style.display='none';
   const _ski=document.getElementById('sk_input');if(_ski)_ski.value='';
   toast('Key cleared');
+  const badge=document.getElementById('sessBadge');
+  if(badge)badge.classList.add('hidden');
 };
 
-// ═══════════════════════════════════════════
+// ═════════════════════════════════════════════
 // ACCOUNT QUERY
 // ═══════════════════════════════════════════
 window.queryAccount=async function(){
@@ -1364,40 +1380,6 @@ function showConfirm(title, rows) {
     };
   });
 })();
-
-// Offline banner wired to RPC status
-const _origCheckRPC = window.checkRPC;
-window.checkRPC = async function() {
-  try {
-    await _origCheckRPC();
-    document.getElementById('offBanner').classList.remove('show');
-  } catch {
-    document.getElementById('offBanner').classList.add('show');
-  }
-};
-
-// Session badge visibility
-const _origLoadKey = window.loadKey;
-window.loadKey = async function() {
-  await _origLoadKey();
-  const badge = document.getElementById('sessBadge');
-  if (badge) badge.classList.remove('hidden');
-  injectKeyboardCopyBtns();
-  setTimeout(wireCopyBtns, 100);
-};
-const _origClearKey = window.clearKey;
-window.clearKey = function() {
-  _origClearKey();
-  const badge = document.getElementById('sessBadge');
-  if (badge) badge.classList.add('hidden');
-};
-
-// Wire payload copy buttons when pages are shown
-const _origShowPage = window.showPage;
-window.showPage = function(id, btn) {
-  _origShowPage(id, btn);
-  setTimeout(wireCopyBtns, 50);
-};
 
 // Init copy btn injection
 injectKeyboardCopyBtns();
