@@ -1501,13 +1501,13 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
       <div class="det-prob-block">
         <div class="det-prob-side det-prob-yes">
           <div class="det-prob-pct" id="det-yes-pct">—</div>
-          <div class="det-prob-lbl">YES</div>
+          <div class="det-prob-lbl" id="det-yes-lbl">YES</div>
           <div class="det-prob-pool" id="det-qyes">—</div>
         </div>
         <div class="det-prob-divider"></div>
         <div class="det-prob-side det-prob-no">
           <div class="det-prob-pct" id="det-no-pct">—</div>
-          <div class="det-prob-lbl">NO</div>
+          <div class="det-prob-lbl" id="det-no-lbl">NO</div>
           <div class="det-prob-pool" id="det-qno">—</div>
         </div>
       </div>
@@ -1931,6 +1931,14 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
       </div>
     </div>
     <div class="field"><label>Question</label><input id="c_question" type="text" placeholder="Will BTC exceed $100k by end of 2025?"/></div>
+    <div class="field">
+      <label>Custom Outcome Labels <span style="color:var(--text3);font-weight:400">(optional — defaults to YES/NO)</span></label>
+      <div class="r2">
+        <input id="c_out_yes" type="text" placeholder="e.g. Spain" maxlength="24"/>
+        <input id="c_out_no" type="text" placeholder="e.g. Argentina" maxlength="24"/>
+      </div>
+      <div class="hint">Use for two-way matchups (Team A vs Team B). Leave blank for standard YES/NO markets.</div>
+    </div>
     <div class="r2"><div class="field"><label>Creator Address</label><input id="c_creator" type="text" placeholder="40 hex chars"/></div><div class="field"><label>B0 Liquidity (PRX)</label><input id="c_b0" type="number" value="60" oninput="updateCreateBreakdown()"/></div></div>
     <div class="r2">
       <div class="field">

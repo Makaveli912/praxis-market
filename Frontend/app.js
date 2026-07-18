@@ -608,6 +608,15 @@ window.showDetail = function(marketId) {
   document.getElementById('det-qno').textContent = fmtPRX(m.qNo) + ' PRX';
   document.getElementById('det-yes-pct').textContent = yesPct + '%';
   document.getElementById('det-no-pct').textContent = noPct + '%';
+  const _outLbls = extractOutcomes(m.rules || '');
+  const _yesLblEl = document.getElementById('det-yes-lbl');
+  const _noLblEl = document.getElementById('det-no-lbl');
+  if (_yesLblEl) _yesLblEl.textContent = _outLbls.yes;
+  if (_noLblEl) _noLblEl.textContent = _outLbls.no;
+  const _btnYesEl = document.getElementById('btn_yes');
+  const _btnNoEl = document.getElementById('btn_no');
+  if (_btnYesEl) _btnYesEl.textContent = _outLbls.yes;
+  if (_btnNoEl) _btnNoEl.textContent = _outLbls.no;
   document.getElementById('det-bar').style.width = yesPct + '%';
   document.getElementById('det-mid').textContent = mid;
   document.getElementById('det-creator').textContent = m.creator || '—';
@@ -928,7 +937,7 @@ window.build_create=function(){try{
   const rules=document.getElementById('c_rules').value.trim();
   const _imgUrl=document.getElementById('c_img')?.value.trim()||'';
   if(!q)throw new Error('Question required');addr40(cr,'Creator');
-  showPL('co','cp',buildUnsigned('create_market','type.googleapis.com/types.MessageCreateMarket',encCreate(cr,b0,exp,nonce,q,buildRulesWithImg(buildRulesWithCat(_cat,rules),_imgUrl)),{fee}));toast('Payload built');
+  showPL('co','cp',buildUnsigned('create_market','type.googleapis.com/types.MessageCreateMarket',encCreate(cr,b0,exp,nonce,q,buildRulesWithOutcomes(buildRulesWithImg(buildRulesWithCat(_cat,rules),_imgUrl),document.getElementById('c_out_yes')?.value.trim()||'',document.getElementById('c_out_no')?.value.trim()||'')),{fee}));toast('Payload built');
 }catch(e){toast(e.message,true);}};
 window.updateCreateBreakdown=function(){
   const b0=parseInt(document.getElementById('c_b0')?.value||0);
@@ -956,7 +965,7 @@ window.signAndSubmit_create=async function(){try{
   const rules=document.getElementById('c_rules').value.trim();
   const _imgUrl=document.getElementById('c_img')?.value.trim()||'';
   if(!q)throw new Error('Question required');addr40(cr,'Creator');
-  await doSubmit('create_market','type.googleapis.com/types.MessageCreateMarket',encCreate(cr,b0,exp,nonce,q,buildRulesWithImg(buildRulesWithCat(_cat,rules),_imgUrl)),{fee},'btn_create','pend_create');
+  await doSubmit('create_market','type.googleapis.com/types.MessageCreateMarket',encCreate(cr,b0,exp,nonce,q,buildRulesWithOutcomes(buildRulesWithImg(buildRulesWithCat(_cat,rules),_imgUrl),document.getElementById('c_out_yes')?.value.trim()||'',document.getElementById('c_out_no')?.value.trim()||'')),{fee},'btn_create','pend_create');
 }catch(e){toast(e.message,true);}};
 
 // ── SUBMIT PREDICTION
@@ -2090,6 +2099,28 @@ const CAT_LABELS = {
   crypto: '🪙 Crypto', sports: '⚽ Sports', politics: '🗳 Politics',
   finance: '📈 Finance', other: '◈ Other'
 };
+
+function extractOutcomes(rules) {
+  if (!rules) return { yes: 'YES', no: 'NO' };
+  const m = rules.match(/\[OUT:([^\|\]]+)\|([^\]]+)\]/);
+  if (!m) return { yes: 'YES', no: 'NO' };
+  return { yes: m[1].trim(), no: m[2].trim() };
+}
+
+function stripOutcomesTag(rules) {
+  if (!rules) return '';
+  return rules.replace(/\[OUT:[^\]]+\]\s*/g, '').trim();
+}
+
+function buildRulesWithOutcomes(rules, yesLabel, noLabel) {
+  const stripped = stripOutcomesTag(rules);
+  const yl = (yesLabel || '').trim();
+  const nl = (noLabel || '').trim();
+  if (!yl || !nl || (yl.toUpperCase() === 'YES' && nl.toUpperCase() === 'NO')) {
+    return stripped;
+  }
+  return stripped + (stripped ? ' ' : '') + '[OUT:' + yl + '|' + nl + ']';
+}
 
 function extractCat(rules) {
   if (!rules) return 'other';
