@@ -2270,6 +2270,7 @@ function buildPraxisCard(m, bookmarks, featured) {
     8: '<span class="spill sp-expired">⏱ EXPIRED</span>'
   };
   const statusHtml = statusMap[m.status] || '';
+  const outLbls = (typeof extractOutcomes === 'function') ? extractOutcomes(m.rules || '') : { yes: 'YES', no: 'NO' };
 
   let iconHtml = '';
   if (typeof extractImg === 'function') {
@@ -2298,11 +2299,11 @@ function buildPraxisCard(m, bookmarks, featured) {
       <div class="pcard-odds" onclick="event.stopPropagation()">
         <div class="pcard-odds-yes" onclick="openDetail('${mid}')">
           <div class="pcard-odds-pct">${yesPct}<span style="font-size:9px;opacity:.6">¢</span></div>
-          <div class="pcard-odds-lbl">YES</div>
+          <div class="pcard-odds-lbl">${outLbls.yes}</div>
         </div>
         <div class="pcard-odds-no" onclick="openDetail('${mid}')">
           <div class="pcard-odds-pct">${noPct}<span style="font-size:9px;opacity:.6">¢</span></div>
-          <div class="pcard-odds-lbl">NO</div>
+          <div class="pcard-odds-lbl">${outLbls.no}</div>
         </div>
       </div>
       <div class="pcard-bar"><div class="pcard-bar-yes" style="width:${yesPct}%"></div></div>
