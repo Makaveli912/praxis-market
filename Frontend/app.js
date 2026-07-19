@@ -832,9 +832,11 @@ window.loadMarkets = async function () {
     window._allMarkets = markets;
     checkRoles();
     renderCurrentTab();
+    return true;
 
   } catch (e) {
     el.innerHTML = '<div class="alert ar">⚠ Cannot reach plugin RPC at <code>' + getPluginRPC() + '</code><br>' + esc(e.message) + '</div>';
+    return false;
   }
 };
 
@@ -2229,20 +2231,6 @@ window.loadResolvers=async function(){
 // ═══════════════════════════════════════════
 // MARKET DETAIL — ACTIVITY FEED + TOP HOLDERS
 // ═══════════════════════════════════════════
-window.switchDetailTab = function(tab) {
-  ['activity','holders'].forEach(t => {
-    const btn = document.getElementById('dtab-'+t);
-    const pane = document.getElementById('dpane-'+t);
-    if(btn) {
-      btn.style.borderBottomColor = t===tab ? 'var(--green)' : 'transparent';
-      btn.style.color = t===tab ? 'var(--text2)' : 'var(--text3)';
-    }
-    if(pane) pane.style.display = t===tab ? '' : 'none';
-  });
-  if(tab==='activity') renderActivityFeed(_detailMarketId);
-  if(tab==='holders')  renderTopHolders(_detailMarketId);
-};
-
 window.renderActivityFeed = function(mid) {
   const el = document.getElementById('dpane-activity');
   if(!el||!mid) return;

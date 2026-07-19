@@ -2388,7 +2388,7 @@ const _origLoadMarkets = window.loadMarkets;
 if (typeof loadMarkets === 'function') {
   window.loadMarkets = async function(...args) {
     const result = await _origLoadMarkets.apply(this, args);
-    setTimeout(refreshTicker, 500);
+    if (result !== false) setTimeout(refreshTicker, 500);
     return result;
   };
 }
@@ -2402,7 +2402,6 @@ setInterval(refreshTicker, 30000);
 // ══════════════════════════════════════
 
 // ── Patch switchDetailTab to handle new 'info' tab ──
-const _origSwitchDetailTab = window.switchDetailTab;
 window.switchDetailTab = function(tab) {
   ['activity','holders','info'].forEach(t => {
     const btn  = document.getElementById('dtab-' + t);
