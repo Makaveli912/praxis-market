@@ -364,6 +364,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .sp-finalized{background:transparent; color:var(--blue);  border:none; padding:0; letter-spacing:0;}
 .sp-cancelled{background:transparent;color:var(--text3); border:none; padding:0; letter-spacing:0; }
 .sp-expired { background:var(--adim); color:var(--amber); border:1px solid rgba(245,166,35,.2); }
+.sp-resolved{background:transparent; color:var(--blue);  border:none; padding:0; letter-spacing:0; }
+.sp-pending { background:transparent; color:var(--amber); border:none; padding:0; letter-spacing:0; }
+.sp-pending .sp-dot { animation:pulse 2s ease-in-out infinite; }
 .sp-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
 .sp-live .sp-dot { animation:pulse 2s ease-in-out infinite; }
 
@@ -2200,15 +2203,16 @@ window.renderCurrentTab = function() {
   const cat = window._activeCat || 'all';
   const sort = window._activeSort || 'vol';
 
-  const STATUS_LIVE = 0, STATUS_CANCELLED = 1, STATUS_PROPOSED = 4,
-        STATUS_DISPUTED = 5, STATUS_FINALIZED = 6, STATUS_VOIDED = 7, STATUS_EXPIRED = 8;
+  const STATUS_LIVE = 0, STATUS_CANCELLED = 1, STATUS_RESOLVED = 2, STATUS_EXPIRED = 3,
+        STATUS_PROPOSED = 4, STATUS_DISPUTED = 5, STATUS_FINALIZED = 6, STATUS_VOIDED = 7,
+        STATUS_AWAITING = 8;
 
   let markets = [...window._allMarkets];
 
   // Filter by tab
   if (tab === 'live') markets = markets.filter(m => m.status === STATUS_LIVE);
   else if (tab === 'proposed') markets = markets.filter(m => m.status === STATUS_PROPOSED || m.status === STATUS_DISPUTED);
-  else if (tab === 'closed') markets = markets.filter(m => m.status === STATUS_FINALIZED || m.status === STATUS_CANCELLED || m.status === STATUS_VOIDED || m.status === STATUS_EXPIRED);
+  else if (tab === 'closed') markets = markets.filter(m => m.status === STATUS_FINALIZED || m.status === STATUS_CANCELLED || m.status === STATUS_VOIDED || m.status === STATUS_EXPIRED || m.status === STATUS_RESOLVED || m.status === STATUS_AWAITING);
 
   // Filter by category
   if (cat !== 'all') {
@@ -2254,6 +2258,8 @@ function buildPraxisCard(m, bookmarks, featured) {
   const vol = total > 0n ? fmtPRX(total) : '—';
   const exp = m.expiry ? '#' + m.expiry.toString() : '—';
   const isBookmarked = bookmarks.includes(mid);
+  const yesMulti = m.qYes > 0n ? (Number(m.qYes + m.qNo) / Number(m.qYes)).toFixed(2) : '—';
+  const noMulti  = m.qNo  > 0n ? (Number(m.qYes + m.qNo) / Number(m.qNo)).toFixed(2)  : '—';
 
   const catKey = (typeof extractCat === 'function') ? extractCat(m.rules || '') : 'other';
   const catSymbols = {crypto:'◈',sports:'◉',politics:'◆',finance:'▲',esports:'▣',other:'◈'};
@@ -2262,12 +2268,14 @@ function buildPraxisCard(m, bookmarks, featured) {
 
   const statusMap = {
     0: '<span class="spill sp-live"><span class="sp-dot"></span>LIVE</span>',
+    1: '<span class="spill sp-cancelled">✕ CANCELLED</span>',
+    2: '<span class="spill sp-resolved">◔ RESOLVED</span>',
+    3: '<span class="spill sp-expired">⏱ EXPIRED</span>',
     4: '<span class="spill sp-proposed">◆ PROPOSED</span>',
     5: '<span class="spill sp-disputed">⚠ DISPUTED</span>',
-    6: '<span class="spill sp-finalized">✓ FINAL</span>',
-    1: '<span class="spill sp-cancelled">✕ CANCELLED</span>',
+    6: '<span class="spill sp-finalized">✓ FINALIZED</span>',
     7: '<span class="spill sp-cancelled">✕ VOID</span>',
-    8: '<span class="spill sp-expired">⏱ EXPIRED</span>'
+    8: '<span class="spill sp-pending"><span class="sp-dot"></span>AWAITING RESOLUTION</span>'
   };
   const statusHtml = statusMap[m.status] || '';
 
@@ -2298,11 +2306,11 @@ function buildPraxisCard(m, bookmarks, featured) {
       <div class="pcard-odds" onclick="event.stopPropagation()">
         <div class="pcard-odds-yes" onclick="openDetail('${mid}')">
           <div class="pcard-odds-pct">${yesPct}<span style="font-size:9px;opacity:.6">¢</span></div>
-          <div class="pcard-odds-lbl">YES</div>
+          <div class="pcard-odds-lbl">YES <span class="pill-multi">${yesMulti}x</span></div>
         </div>
         <div class="pcard-odds-no" onclick="openDetail('${mid}')">
           <div class="pcard-odds-pct">${noPct}<span style="font-size:9px;opacity:.6">¢</span></div>
-          <div class="pcard-odds-lbl">NO</div>
+          <div class="pcard-odds-lbl">NO <span class="pill-multi">${noMulti}x</span></div>
         </div>
       </div>
       <div class="pcard-bar"><div class="pcard-bar-yes" style="width:${yesPct}%"></div></div>

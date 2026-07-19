@@ -513,89 +513,6 @@ function resolverTier(addr) {
   return {label:'Registered', color:'var(--text3)', icon:'○'};
 }
 
-window.renderMarketCards = function(markets) {
-  if (!markets || markets.length === 0) return '<div class="alert ay">No markets found</div>';
-
-  // category filter — tag-based first, keyword fallback
-  let filtered = markets;
-  if (window._activeCat && window._activeCat !== 'all') {
-    const cat = window._activeCat;
-    filtered = markets.filter(m => {
-      const tag = extractCat(m.rules || '');
-      if (tag && tag !== 'other') return tag === cat;
-      // keyword fallback for untagged markets
-      const q = (m.question || '').toLowerCase();
-      if (cat === 'crypto')   return /btc|eth|crypto|bitcoin|ethereum|solana|token|defi|nft|blockchain/.test(q);
-      if (cat === 'sports')   return /nba|nfl|fifa|soccer|football|tennis|golf|sports|league|match|game|win/.test(q);
-      if (cat === 'politics') return /election|president|vote|congress|senate|government|policy|law|bill/.test(q);
-      if (cat === 'finance')  return /stock|market|fed|rate|gdp|inflation|s&p|nasdaq|economy|oil|gold/.test(q);
-      return cat === 'other';
-    });
-  }
-
-  if (filtered.length === 0) return '<div class="alert ay">No markets in this category</div>';
-
-  return '<div class="mgrid">' + filtered.map(m => {
-    const total = m.qYes + m.qNo;
-    const yesPct = total > 0n ? Number((m.qYes * 100n) / total) : 50;
-    const noPct  = 100 - yesPct;
-    const mid    = m.marketId || m.txHash || '';
-    const vol    = total > 0n ? fmtPRX(total) : '—';
-    const exp    = m.expiry ? '#' + m.expiry.toString() : '—';
-    const creator = (m.creator || '').slice(0,8) + '…';
-
-    let statusHtml = '';
-    let cardClass  = '';
-    if (m.status === 0) {
-      statusHtml = '<span class="spill sp-live"><span class="sp-dot"></span>LIVE</span>';
-    } else if (m.status === 4) {
-      statusHtml = '<span class="spill sp-proposed">PROPOSED</span>';
-      cardClass = 'mexp';
-    } else if (m.status === 5) {
-      statusHtml = '<span class="spill sp-disputed">DISPUTED</span>';
-      cardClass = 'mexp';
-    } else if (m.status === 6) {
-      statusHtml = '<span class="spill sp-finalized">FINALIZED</span>';
-      cardClass = 'mfin';
-    } else if (m.status === 1) {
-      statusHtml = '<span class="spill sp-cancelled">CANCELLED</span>';
-      cardClass = 'mcan';
-    } else if (m.status === 8) {
-      statusHtml = '<span class="spill sp-expired">EXPIRED</span>';
-      cardClass = 'mexp';
-    }
-
-    const showBtns = m.status === 0;
-
-    const catIcon = {'crypto':'🪙','sports':'⚽','politics':'🗳','finance':'📈','other':'◈'}[extractCat(m.rules||'')] || '◈';
-    const catName = (CAT_LABELS[extractCat(m.rules||'')] || 'Other').replace(/[🪙⚽🗳📈◈]\s*/,'');
-    const hasBanner = !!extractImg(m.rules||'');
-    const yesMulti = m.qYes > 0n ? (Number(m.qYes + m.qNo) / Number(m.qYes)).toFixed(2) : '—';
-    const noMulti  = m.qNo  > 0n ? (Number(m.qYes + m.qNo) / Number(m.qNo)).toFixed(2)  : '—';
-    return `<div class="mcard ${cardClass}" onclick="openDetail(this.dataset.mid)" data-mid="${mid}">
-    <div class="mcard-top">
-      <div class="mcard-head">
-        ${mkCardIcon(m.rules)}
-        <div class="mcard-head-text">
-          <div class="mcard-cat">${catIcon} ${catName} &nbsp;${statusHtml}</div>
-          <div class="mcard-q">${esc(m.question || '(no question)')}</div>
-        </div>
-      </div>
-      <div class="mcard-pill-row">
-        <span class="pill-yes">${yesPct}% <span class="pill-multi">${yesMulti}x</span></span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">·</span>
-        <span class="pill-no">${noPct}% <span class="pill-multi">${noMulti}x</span></span>
-      </div>
-      <div class="btrack"><div class="byes" style="width:${yesPct}%"></div></div>
-    </div>
-    <div class="mcard-meta">
-      <div class="meta-item"><span class="meta-lbl">Vol</span><span class="meta-val g">${vol}</span></div>
-      <div class="meta-item"><span class="meta-lbl">Exp</span><span class="meta-val">${exp}</span></div>
-      <div class="meta-item"><span class="meta-lbl">Creator</span><span class="meta-val">${creator}</span></div>
-    </div></div>`;
-  }).join('') + '</div>';
-};
-
 // ── Volume chip updater ──
 
 // store markets globally for detail view
@@ -855,7 +772,9 @@ function renderCurrentTab() {
     el.innerHTML = '<div class="alert ay">' + (labels[_activeTab] || 'No markets') + '</div>';
     return;
   }
-  el.innerHTML = window.renderMarketCards(markets);
+  let bookmarks = [];
+  try { bookmarks = JSON.parse(localStorage.getItem('praxis_bookmarks') || '[]'); } catch {}
+  el.innerHTML = '<div class="mgrid-2col">' + markets.map((m,i) => buildPraxisCard(m, bookmarks, i===0)).join('') + '</div>';
 }
 
 window.loadMarkets = async function () {
@@ -2695,60 +2614,14 @@ window.runSearch = function() {
     out.innerHTML = '<div style="color:var(--text3);font-family:var(--mono);font-size:11px;text-align:center;padding:40px 0">No markets found</div>';
     return;
   }
-  out.innerHTML = '<div class="mgrid">' + filtered.map(m => {
-    const mid = m.marketId || m.txHash || '';
-    const total = m.qYes + m.qNo;
-    const yesPct = total > 0n ? Number((m.qYes * 100n) / total) : 50;
-    const noPct = 100 - yesPct;
-    const vol = fmtPRX(total) + ' PRX';
-    const exp = m.expiry ? '#' + m.expiry.toString() : '—';
-    const catIcon = {'crypto':'🪙','sports':'⚽','politics':'🗳','finance':'📈','other':'◈'}[extractCat(m.rules||'')] || '◈';
-    const catName = (CAT_LABELS[extractCat(m.rules||'')] || 'Other').replace(/[🪙⚽🗳📈◈]\s*/,'');
-    const statusMap = {0:'<span class="spill sp-live">● LIVE</span>',2:'<span class="spill sp-proposed">◆ PROPOSED</span>',3:'<span class="spill sp-disputed">⚠ DISPUTED</span>',4:'<span class="spill sp-finalized">✓ FINALIZED</span>',1:'<span class="spill sp-cancelled">✕ CANCELLED</span>',8:'<span class="spill sp-proposed">⏱ EXPIRED</span>'};
-    const statusHtml = statusMap[m.status] || '';
-    const hasBanner = !!extractImg(m.rules||'');
-    const yesMulti = m.qYes > 0n ? (Number(m.qYes + m.qNo) / Number(m.qYes)).toFixed(2) : '—';
-    const noMulti  = m.qNo  > 0n ? (Number(m.qYes + m.qNo) / Number(m.qNo)).toFixed(2)  : '—';
-    return `<div class="mcard" onclick="openDetail(this.dataset.mid)" data-mid="${mid}">
-    <div class="mcard-top">
-      <div class="mcard-head">
-        ${mkCardIcon(m.rules)}
-        <div class="mcard-head-text">
-          <div class="mcard-cat">${catIcon} ${catName} &nbsp;${statusHtml}</div>
-          <div class="mcard-q">${esc(m.question || '(no question)')}</div>
-        </div>
-      </div>
-      <div class="mcard-pill-row">
-        <span class="pill-yes">${yesPct}% <span class="pill-multi">${yesMulti}x</span></span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">·</span>
-        <span class="pill-no">${noPct}% <span class="pill-multi">${noMulti}x</span></span>
-      </div>
-      <div class="btrack"><div class="byes" style="width:${yesPct}%"></div></div>
-    </div>
-    <div class="mcard-meta">
-      <div class="meta-item"><span class="meta-lbl">Vol</span><span class="meta-val g">${vol}</span></div>
-      <div class="meta-item"><span class="meta-lbl">Exp</span><span class="meta-val">${exp}</span></div>
-    </div></div>`;
-  }).join('') + '</div>';
+  let bookmarks = [];
+  try { bookmarks = JSON.parse(localStorage.getItem('praxis_bookmarks') || '[]'); } catch {}
+  out.innerHTML = '<div class="mgrid-2col">' + filtered.map(m => buildPraxisCard(m, bookmarks, false)).join('') + '</div>';
 };
 
 // ═══════════════════════════════════════════
 // NEW DETAIL PAGE FUNCTIONS
 // ═══════════════════════════════════════════
-
-window.applySortAndRender = function() {
-  const sort = document.getElementById('marketSort')?.value || 'vol';
-  let markets = [...(_allMarkets || [])];
-  if (sort === 'new') markets.sort((a,b) => (b.height||0) - (a.height||0));
-  else if (sort === 'expiry') markets.sort((a,b) => Number(a.expiry||0) - Number(b.expiry||0));
-  else if (sort === 'yes') markets.sort((a,b) => {
-    const pctA = (a.qYes+a.qNo)>0n ? Number(a.qYes*100n/(a.qYes+a.qNo)) : 50;
-    const pctB = (b.qYes+b.qNo)>0n ? Number(b.qYes*100n/(b.qYes+b.qNo)) : 50;
-    return pctB - pctA;
-  });
-  const el = document.getElementById('marketsList');
-  if (el) el.innerHTML = renderMarketCards(markets);
-};
 
 window.setHolderTab = function(side, el) {
   document.querySelectorAll('.det-htab').forEach(b => b.classList.remove('active'));
