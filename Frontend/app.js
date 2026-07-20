@@ -24,9 +24,9 @@ window.getRPCHost = getRPCHost;
 window.getRPC = getRPC;
 window.getPluginRPC = getPluginRPC;
 
-let currentHeight = 0;
-let currentNetworkID = 1;
-let currentChainID   = 266;
+window.currentHeight = 0;
+window.currentNetworkID = 1;
+window.currentChainID   = 266;
 let selectedOut   = true;
 let propOut       = true;
 let revOut        = true;
@@ -98,7 +98,7 @@ function encSignBytes(msgType,typeUrl,inner,{txTime,fee,height,memo,netId,chainI
   const any=encAny(typeUrl,inner);
   return cat(
     sf(1,msgType),ef(2,any),
-    vf(4,height||currentHeight),vf(5,txTime),vf(6,fee||10000),
+    vf(4,height||window.currentHeight),vf(5,txTime),vf(6,fee||10000),
     memo?sf(7,memo):new Uint8Array(0),
     vf(8,netId||1),vf(9,chainId||1),
   );
@@ -129,7 +129,7 @@ function b2b64(bytes){
 // ═══════════════════════════════════════════
 async function buildSigned(msgType,typeUrl,inner,meta){
   const txTime=BigInt(Date.now())*1000n;
-  const p={txTime,fee:meta.fee||10000,height:meta.height||currentHeight,memo:'',netId:currentNetworkID,chainId:currentChainID};
+  const p={txTime,fee:meta.fee||10000,height:meta.height||window.currentHeight,memo:'',netId:window.currentNetworkID,chainId:window.currentChainID};
   const sb=encSignBytes(msgType,typeUrl,inner,p);
   const sig=await blsSign(sb);
   const base={
@@ -138,8 +138,8 @@ async function buildSigned(msgType,typeUrl,inner,meta){
     time: Number(txTime),
     fee: p.fee,
     memo: '',
-    networkID: currentNetworkID,
-    chainID: currentChainID,
+    networkID: window.currentNetworkID,
+    chainID: window.currentChainID,
   };
   if(msgType==='send'){
     const bytes=inner instanceof Uint8Array?inner:h2b(b2h(inner));
@@ -162,12 +162,12 @@ function buildUnsigned(msgType,typeUrl,inner,meta){
     message_type: msgType,
     msg: { type_url: typeUrl, value: b2b64(inner) },
     signature: null,
-    created_height: meta.height||currentHeight,
+    created_height: meta.height||window.currentHeight,
     time: Number(txTime),
     fee: meta.fee||10000,
     memo: '',
-    network_id: currentNetworkID||1,
-    chain_id: currentChainID||1,
+    network_id: window.currentNetworkID||1,
+    chain_id: window.currentChainID||1,
   };
 }
 
@@ -249,24 +249,24 @@ updateTL();
 // ═══════════════════════════════════════════
 window.checkRPC=async function(){
   try{
-    const d=await rpc('/v1/query/height',{});currentHeight=d.height||0;
-    currentNetworkID=d.network_id||d.networkID||currentNetworkID;
+    const d=await rpc('/v1/query/height',{});window.currentHeight=d.height||0;
+    window.currentNetworkID=d.network_id||d.networkID||window.currentNetworkID;
     try{
-      const blk=await rpc('/v1/query/block-by-height',{height:currentHeight});
+      const blk=await rpc('/v1/query/block-by-height',{height:window.currentHeight});
       const hdr=blk?.blockHeader?.lastQuorumCertificate?.header;
       if(hdr){
-        currentChainID=hdr.chainId||hdr.chainID||currentChainID;
-        currentNetworkID=hdr.networkID||hdr.networkId||currentNetworkID;
+        window.currentChainID=hdr.chainId||hdr.chainID||window.currentChainID;
+        window.currentNetworkID=hdr.networkID||hdr.networkId||window.currentNetworkID;
       }
     }catch(e){console.warn('block-by-height chainId lookup failed',e);}
     ['rpcDot','rpcDotM'].forEach(id=>{const e=document.getElementById(id);if(e)e.className='dot live';});
     const el=document.getElementById('rpcStatus');if(el)el.textContent='live';
-    const hb=document.getElementById('hBadge');if(hb)hb.textContent=`block ${currentHeight}`;
-    const hm=document.getElementById('hbM');if(hm)hm.textContent=`#${currentHeight}`;
-    ['ni_height'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=currentHeight;});
+    const hb=document.getElementById('hBadge');if(hb)hb.textContent=`block ${window.currentHeight}`;
+    const hm=document.getElementById('hbM');if(hm)hm.textContent=`#${window.currentHeight}`;
+    ['ni_height'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=window.currentHeight;});
     const ns=document.getElementById('ni_status');if(ns)ns.textContent='connected';
     const nr=document.getElementById('ni_rpc');if(nr)nr.textContent=getRPC();
-    const sh=document.getElementById('sb_h');if(sh)sh.textContent=currentHeight;
+    const sh=document.getElementById('sb_h');if(sh)sh.textContent=window.currentHeight;
     updateExpiryFromDate();
     const nonceEl=document.getElementById('c_nonce');if(nonceEl&&!nonceEl.value)nonceEl.value=BigInt(Date.now())*1000n;
     const ob=document.getElementById('offBanner');if(ob)ob.classList.remove('show');
@@ -376,7 +376,7 @@ function setPend(btnId,pendId,on){
 
 async function doSubmit(msgType,typeUrl,inner,meta,btnId,pendId){
   if(!signerPrivKey)return toast('Load a private key in Signer first',true);
-  if(!currentHeight)return toast('Node not connected',true);
+  if(!window.currentHeight)return toast('Node not connected',true);
   setPend(btnId,pendId,true);
   try{
     const tx=await buildSigned(msgType,typeUrl,inner,meta);
@@ -563,7 +563,7 @@ window.showDetail = function(marketId) {
   document.getElementById('det-total').textContent = fmtPRX(m.qYes + m.qNo) + ' PRX';
   if (m.expiry) {
     const blk = Number(m.expiry);
-    const blocksLeft = blk - currentHeight;
+    const blocksLeft = blk - window.currentHeight;
     const msLeft = blocksLeft * 5000;
     const expDate = new Date(Date.now() + msLeft);
     const dateStr = expDate.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
@@ -678,7 +678,7 @@ window.showDetail = function(marketId) {
 
   const reclaimBtn = document.getElementById('det-reclaim-btn');
   if (reclaimBtn) {
-    if (m.status === 8 && currentHeight > Number(m.expiry) + 300) {
+    if (m.status === 8 && window.currentHeight > Number(m.expiry) + 300) {
       reclaimBtn.style.display = '';
       reclaimBtn.setAttribute('onclick', 'fillReclaim(' + JSON.stringify(mid) + ')');
     } else {
@@ -767,7 +767,7 @@ function renderCurrentTab() {
     // closed — rolling window of last CLOSED_WINDOW blocks
     markets = _allMarkets.filter(m =>
       (m.status === 8 || m.status === 1 || m.status === 6 || m.status === 7 || m.status === 2 || m.status === 3) &&
-      m.expiry && Number(m.expiry) >= (currentHeight - CLOSED_WINDOW)
+      m.expiry && Number(m.expiry) >= (window.currentHeight - CLOSED_WINDOW)
     );
   }
 
@@ -791,7 +791,7 @@ window.loadMarkets = async function () {
     await checkRPC();
 
     const heightResp = await rpc('/v1/query/height', {});
-    currentHeight = Number(heightResp.height || currentHeight || 1);
+    window.currentHeight = Number(heightResp.height || window.currentHeight || 1);
 
     const _pluginController = new AbortController();
     const _pluginTimeout = setTimeout(() => _pluginController.abort(), 10000);
@@ -814,7 +814,7 @@ window.loadMarkets = async function () {
       const qNo  = BigInt(mk.q_no || 0);
       const expiry = BigInt(mk.expiry_time || 0);
       let status = (mk.status !== undefined && mk.status !== null) ? Number(mk.status) : 0;
-      if (status === 0 && expiry && currentHeight > Number(expiry)) status = 8;
+      if (status === 0 && expiry && window.currentHeight > Number(expiry)) status = 8;
       // NOTE: resolver-driven states (proposed/finalized/disputed) are not
       // yet exposed by /v1/query/markets — only expiry-based live/closed
       // is derivable here. Extend the plugin response with a status field
@@ -873,7 +873,7 @@ window.build_create=function(){try{
   const q=document.getElementById('c_question').value.trim();
   const cr=document.getElementById('c_creator').value.trim().toLowerCase();
   const b0=parseInt(document.getElementById('c_b0').value)*1000000;
-  const exp=parseInt(document.getElementById('c_expiry').value)||currentHeight+1000;
+  const exp=parseInt(document.getElementById('c_expiry').value)||window.currentHeight+1000;
   const fee=parseInt(document.getElementById('c_fee').value)||10000;
   let nonce=document.getElementById('c_nonce').value;
   if(!nonce)nonce=BigInt(Date.now())*1000n;
@@ -901,7 +901,7 @@ window.signAndSubmit_create=async function(){try{
   const q=document.getElementById('c_question').value.trim();
   const cr=document.getElementById('c_creator').value.trim().toLowerCase();
   const b0=parseInt(document.getElementById('c_b0').value)*1000000;
-  const exp=parseInt(document.getElementById('c_expiry').value)||currentHeight+1000;
+  const exp=parseInt(document.getElementById('c_expiry').value)||window.currentHeight+1000;
   const fee=parseInt(document.getElementById('c_fee').value)||10000;
   let nonce=document.getElementById('c_nonce').value;
   if(!nonce)nonce=BigInt(Date.now())*1000n;
@@ -1983,7 +1983,7 @@ window.updateExpiryFromDate = function() {
   }
 
   const blocksNeeded = blocksFromNow(diffMs);
-  const blockHeight  = currentHeight + blocksNeeded;
+  const blockHeight  = window.currentHeight + blocksNeeded;
   hidden.value = blockHeight;
 
   const dur = fmtDuration(diffMs);
@@ -2406,7 +2406,7 @@ async function loadPoolStat(elId, key) {
     const el = document.getElementById(elId);
     if (!el) return;
     // Pool data comes from plugin state — show epoch estimate for now
-    const epoch = currentHeight ? Math.floor(currentHeight / EPOCH_BLOCKS) : 0;
+    const epoch = window.currentHeight ? Math.floor(window.currentHeight / EPOCH_BLOCKS) : 0;
     el.textContent = 'Epoch #' + epoch;
   } catch(e) {}
 }
@@ -2414,7 +2414,7 @@ async function loadPoolStat(elId, key) {
 // Resolver reward data
 async function loadResolverRewardData() {
   try {
-    const epoch = currentHeight ? Math.floor(currentHeight / EPOCH_BLOCKS) : 0;
+    const epoch = window.currentHeight ? Math.floor(window.currentHeight / EPOCH_BLOCKS) : 0;
     document.getElementById('rrw-pool').textContent = 'Epoch #' + epoch;
 
     // Pull resolver info from the resolvers map if already loaded
@@ -2458,7 +2458,7 @@ async function loadResolverRewardData() {
 // Builder reward data
 async function loadBuilderRewardData() {
   try {
-    const epoch = currentHeight ? Math.floor(currentHeight / EPOCH_BLOCKS) : 0;
+    const epoch = window.currentHeight ? Math.floor(window.currentHeight / EPOCH_BLOCKS) : 0;
     document.getElementById('brw-pool').textContent = 'Epoch #' + epoch;
     let rows = '';
     for (let i = Math.max(0, epoch - 4); i <= epoch; i++) {
@@ -2480,7 +2480,7 @@ window.signAndSubmit_rewardResolver = async function() {
   try {
     const addr = document.getElementById('rrw-addr').value.trim();
     const epochVal = document.getElementById('rrw-epoch').value.trim();
-    const epoch = epochVal ? parseInt(epochVal) : Math.floor((currentHeight||0) / EPOCH_BLOCKS);
+    const epoch = epochVal ? parseInt(epochVal) : Math.floor((window.currentHeight||0) / EPOCH_BLOCKS);
     const fee = BigInt(document.getElementById('rrw-fee').value||10000);
     if (!addr || addr.length !== 40) return toast('Invalid resolver address', true);
     await doSubmit('claim_resolver_reward','type.googleapis.com/types.MessageClaimResolverReward',encRewardResolver(addr,epoch),{fee},'btn_rrw','pend_rrw');
@@ -2491,7 +2491,7 @@ window.build_rewardResolver = function() {
   try {
     const addr = document.getElementById('rrw-addr').value.trim();
     const epochVal = document.getElementById('rrw-epoch').value.trim();
-    const epoch = epochVal ? parseInt(epochVal) : Math.floor((currentHeight||0) / EPOCH_BLOCKS);
+    const epoch = epochVal ? parseInt(epochVal) : Math.floor((window.currentHeight||0) / EPOCH_BLOCKS);
     const fee = BigInt(document.getElementById('rrw-fee').value||10000);
     if (!addr || addr.length !== 40) return toast('Invalid resolver address', true);
     showPL('rrwo','rrwp',buildUnsigned('claim_resolver_reward','type.googleapis.com/types.MessageClaimResolverReward',encRewardResolver(addr,epoch),{fee}));
