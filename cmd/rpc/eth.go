@@ -300,7 +300,7 @@ func (s *Server) EthGetTransactionCount(args []any) (any, error) {
 		}
 	}
 	return s.withStore(func(st *store.Store) (any, error) {
-		base := s.currentEthBlockNumber()
+		base := s.ethereumNonceFloor(s.currentEthBlockNumber())
 		hasMinedHistory := false
 		if minedNonce, ok, nonceErr := s.latestMinedNonceForAddress(st, address); nonceErr != nil {
 			return nil, nonceErr
@@ -342,7 +342,7 @@ func (s *Server) EthGetTransactionCount(args []any) (any, error) {
 			if hasMinedHistory {
 				return hexutil.Uint64(base), nil
 			}
-			return hexutil.Uint64(height), nil
+			return hexutil.Uint64(s.ethereumNonceFloor(height)), nil
 		}
 	})
 }
@@ -1664,6 +1664,11 @@ func (s *Server) maximumAcceptedEthereumNonce() uint64 {
 	return height + fsm.BlockAcceptanceRange
 }
 
+// ethereumNonceFloor() returns the stable nonce floor used for Ethereum-compatible RPC responses.
+func (s *Server) ethereumNonceFloor(height uint64) uint64 {
+	return height - (height % fsm.BlockAcceptanceRange)
+}
+
 // latestMinedNonceForAddress() returns the next confirmed nonce for an address when it has mined Ethereum-backed tx history.
 func (s *Server) latestMinedNonceForAddress(st *store.Store, address crypto.AddressI) (uint64, bool, error) {
 	nonce, ok, err := st.GetLatestMinedEthereumNonce(address)
@@ -1671,8 +1676,8 @@ func (s *Server) latestMinedNonceForAddress(st *store.Store, address crypto.Addr
 		return 0, ok, err
 	}
 	nextNonce := nonce + 1
-	if currentNonce := s.currentEthBlockNumber(); nextNonce < currentNonce {
-		nextNonce = currentNonce
+	if floorNonce := s.ethereumNonceFloor(s.currentEthBlockNumber()); nextNonce < floorNonce {
+		nextNonce = floorNonce
 	}
 	return nextNonce, true, nil
 }

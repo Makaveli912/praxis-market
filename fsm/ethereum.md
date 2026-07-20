@@ -370,15 +370,19 @@ Pending visibility is node-local, just like Ethereum mempool visibility is node-
 
 *BlockAcceptanceRange:*
 - Transactions are only valid if their `created_at_height` is within ±4320 blocks of the current chain height. (Assuming 20s block times, this represents roughly 24 hours of leeway).
+- `EthNonceEpoch` currently matches `BlockAcceptanceRange`, so the nonce floor is `epochFloor = currentHeight - (currentHeight % 4320)`.
 
 *Implementation:*
 
-- For Ethereum-derived accounts with mined ETH-backed tx history, `eth_getTransactionCount(..., "latest")` returns the sender's highest mined Ethereum nonce plus one.
-- `eth_getTransactionCount(..., "pending")` returns the same confirmed base plus a local pending offset derived from the node's in-memory pending view.
-- For addresses without mined Ethereum-backed tx history, the RPC falls back to Canopy's height-based pseudo-nonce behavior for compatibility.
+- For Ethereum-derived accounts with mined ETH-backed tx history, `eth_getTransactionCount(..., "latest")` returns `max(highestMinedNonce + 1, epochFloor)`.
+- For addresses without mined Ethereum-backed tx history, `eth_getTransactionCount(..., "latest")` returns `epochFloor`.
+- `eth_getTransactionCount(..., "pending")` keeps the same node-local pending behavior on top of that base and returns `max(base, highestLocalPendingNonce + 1)`.
+- The signed Ethereum nonce remains the exact `createdHeight`, so RLP translation and Ethereum transaction hashing stay unchanged.
+- Within a single epoch, the compatibility nonce stays stable instead of advancing every block with chain height.
 
 *Purpose in RPC compatibility:*
 - `eth_getTransactionCount` is expected by many Ethereum tools and wallets to return a usable nonce.
+- The method should be treated as a next-usable compatibility nonce, not as a canonical count of how many transactions an address has historically sent.
 - The implementation is intended to be wallet-compatible for active Ethereum-derived accounts without introducing a full persistent Ethereum nonce subsystem into Canopy.
 - Canopy tolerates nonce gaps for Ethereum-submitted transactions; the values only need to remain distinct within the local pending set for a given block-building window.
 
@@ -386,6 +390,8 @@ Pending visibility is node-local, just like Ethereum mempool visibility is node-
 
 - Explicit historical block-number queries are **not** canonical Ethereum account-history semantics. If a caller asks for `eth_getTransactionCount(address, "0x...")`, the RPC validates the tag but serves a compatibility value instead of reconstructing the exact historical nonce for that address at that block.
 - Pending nonce visibility is local to the node's mempool and pending cache.
+- In load-balanced deployments, nonce-sensitive tooling should prefer sticky routing or querying the same node that accepted the pending transaction.
+- Cross-node false positives are reduced, not eliminated. They can still appear when the epoch rolls over, or when another node has seen pending transactions that the current node has not.
 - The method should be treated as compatibility-oriented rather than a full Ethereum archival nonce implementation.
 
 #### eth_getChainId
