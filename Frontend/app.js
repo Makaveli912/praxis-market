@@ -525,7 +525,6 @@ function resolverTier(addr) {
 // store markets globally for detail view
 let _allMarkets = [];
 let _resolverRegistry = new Map();
-let _detailMarketId = null; // address -> {stake, proposalCount}
 
 window.showDetail = function(marketId) {
   const m = _allMarkets.find(x => x.marketId === marketId || x.txHash === marketId);
@@ -724,9 +723,50 @@ window.showDetail = function(marketId) {
     bannerCard.style.display = 'none';
   }
 
-  _detailMarketId = mid;
   const _pmidEl = document.getElementById('p_mid'); if (_pmidEl) _pmidEl.value = mid;
   showPage('detail', null);
+
+  // Hero image
+  if (m) {
+    // Hero image
+    const imgUrl = (typeof extractImg === 'function') ? extractImg(m.rules || '') : '';
+    const heroWrap  = document.getElementById('det-hero-img-wrap');
+    const heroBg    = document.getElementById('det-img-banner-img');
+    const heroThumb = document.getElementById('det-img-thumb');
+    const heroEmpty = document.getElementById('det-hero-empty');
+    if (imgUrl) {
+      if (heroBg)    { heroBg.src = imgUrl; heroBg.style.display = ''; }
+      if (heroThumb) heroThumb.src = imgUrl;
+      if (heroWrap)  heroWrap.style.display = '';
+      if (heroEmpty) heroEmpty.style.display = 'none';
+    } else {
+      if (heroBg)    heroBg.style.display = 'none';
+      if (heroWrap)  heroWrap.style.display = 'none';
+      if (heroEmpty) heroEmpty.style.display = '';
+    }
+
+    // Category badge
+    const catKey = (typeof extractCat === 'function') ? extractCat(m.rules || '') : 'other';
+    const catIcons = {crypto:'🪙',sports:'⚽',politics:'🗳',finance:'📈',esports:'🎮',other:'◈'};
+    const catBadgeHero = document.getElementById('det-cat-badge-hero');
+    if (catBadgeHero) catBadgeHero.textContent = (catIcons[catKey] || '◈') + ' ' + catKey.charAt(0).toUpperCase() + catKey.slice(1);
+
+    // Expiry (also fill raw for info tab)
+    const rawEl = document.getElementById('det-expiry-raw');
+    if (rawEl && m.expiry) rawEl.textContent = 'Block #' + m.expiry.toString();
+
+    // YES/NO pct on outcome buttons
+    const total = (m.qYes || 0n) + (m.qNo || 0n);
+    const yesPct = total > 0n ? Number(m.qYes * 100n / total) : 50;
+    const noPct  = 100 - yesPct;
+    window._detailMarketId = mid;
+  }
+
+  // Render chart + holders sidebar
+  setTimeout(() => {
+    renderDetailChart(mid);
+    renderHoldersSidebar(mid);
+  }, 80);
   setTimeout(()=>switchDetailTab('activity'), 50);
 };
 window.openDetail = window.showDetail;
