@@ -562,7 +562,334 @@ func (p *Plugin) StartRPCServer() {
 		json.NewEncoder(w).Encode(slashes)
 	})
 
-	log.Printf("plugin RPC server listening on %s (routes: /v1/query/markets, /v1/query/positions, /v1/query/resolvers, /v1/query/proposals, /v1/query/disputes, /v1/query/votes, /v1/query/outcomes, /v1/query/slashes)", addr)
+	// GET /v1/query/position?market=<hex>&address=<hex>  -> a single address's position in a market, plus market context
+	mux.HandleFunc("/v1/query/position", func(w http.ResponseWriter, r *http.Request) {
+		marketHex := r.URL.Query().Get("market")
+		addrHex := r.URL.Query().Get("address")
+		if marketHex == "" || addrHex == "" {
+			http.Error(w, "missing required query params: market, address", http.StatusBadRequest)
+			return
+		}
+		marketId, err := hex.DecodeString(marketHex)
+		if err != nil {
+			http.Error(w, "invalid market: must be hex-encoded", http.StatusBadRequest)
+			return
+		}
+		addr, err := hex.DecodeString(addrHex)
+		if err != nil {
+			http.Error(w, "invalid address: must be hex-encoded", http.StatusBadRequest)
+			return
+		}
+
+		resp, qErr := p.QueryState(0, &PluginStateReadRequest{
+			Keys: []*PluginKeyRead{
+				{QueryId: 1, Key: KeyForPosition(marketId, addr)},
+				{QueryId: 2, Key: KeyForMarket(marketId)},
+			},
+		})
+		if qErr != nil {
+			http.Error(w, qErr.Msg, http.StatusInternalServerError)
+			return
+		}
+
+		result := map[string]interface{}{"market": marketHex, "address": addrHex}
+
+		getEntry := func(qid uint64) []byte {
+			for _, res := range resp.Results {
+				if res.QueryId == qid && len(res.Entries) > 0 {
+					return res.Entries[0].Value
+				}
+			}
+			return nil
+		}
+
+		if v := getEntry(1); v != nil {
+			pos := &PositionState{}
+			if err := Unmarshal(v, pos); err == nil {
+				result["position"] = pos
+			}
+		} else {
+			result["position"] = nil
+		}
+
+		if v := getEntry(2); v != nil {
+			mkt := &MarketState{}
+			if err := Unmarshal(v, mkt); err == nil {
+				result["market_state"] = mkt
+			}
+		} else {
+			http.Error(w, "market not found", http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	})
+
+	// GET /v1/query/account?address=<hex>  -> built-in Account balance/vesting record
+	mux.HandleFunc("/v1/query/account", func(w http.ResponseWriter, r *http.Request) {
+		addrHex := r.URL.Query().Get("address")
+		if addrHex == "" {
+			http.Error(w, "missing required query param: address", http.StatusBadRequest)
+			return
+		}
+		addr, err := hex.DecodeString(addrHex)
+		if err != nil {
+			http.Error(w, "invalid address: must be hex-encoded", http.StatusBadRequest)
+			return
+		}
+
+		resp, qErr := p.QueryState(0, &PluginStateReadRequest{
+			Keys: []*PluginKeyRead{
+				{QueryId: 1, Key: KeyForAccount(addr)},
+			},
+		})
+		if qErr != nil {
+			http.Error(w, qErr.Msg, http.StatusInternalServerError)
+			return
+		}
+		if len(resp.Results) == 0 || len(resp.Results[0].Entries) == 0 {
+			http.Error(w, "account not found", http.StatusNotFound)
+			return
+		}
+		acct := &Account{}
+		if err := Unmarshal(resp.Results[0].Entries[0].Value, acct); err != nil {
+			http.Error(w, "failed to decode account", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"address": addrHex,
+			"account": acct,
+		})
+	})
+
+	// GET /v1/query/unbonding?address=<hex>  -> per-resolver unbonding status (0x29)
+	mux.HandleFunc("/v1/query/unbonding", func(w http.ResponseWriter, r *http.Request) {
+		addrHex := r.URL.Query().Get("address")
+		if addrHex == "" {
+			http.Error(w, "missing required query param: address", http.StatusBadRequest)
+			return
+		}
+		addr, err := hex.DecodeString(addrHex)
+		if err != nil {
+			http.Error(w, "invalid address: must be hex-encoded", http.StatusBadRequest)
+			return
+		}
+
+		resp, qErr := p.QueryState(0, &PluginStateReadRequest{
+			Keys: []*PluginKeyRead{
+				{QueryId: 1, Key: KeyForUnbondingRecord(addr)},
+			},
+		})
+		if qErr != nil {
+			http.Error(w, qErr.Msg, http.StatusInternalServerError)
+			return
+		}
+		if len(resp.Results) == 0 || len(resp.Results[0].Entries) == 0 {
+			http.Error(w, "no unbonding record for this address", http.StatusNotFound)
+			return
+		}
+		rec := &ResolverRecord{}
+		if err := Unmarshal(resp.Results[0].Entries[0].Value, rec); err != nil {
+			http.Error(w, "failed to decode unbonding record", http.StatusInternalServerError)
+			return
+		}
+		now := GetGlobalHeight()
+		result := map[string]interface{}{
+			"address":                  addrHex,
+			"unbonding_amount":         rec.UnbondingAmount,
+			"unbonding_release_height": rec.UnbondingReleaseHeight,
+			"current_height":           now,
+			"released":                 now > 0 && now >= rec.UnbondingReleaseHeight,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	})
+
+	// GET /v1/query/dispute-context?market=<hex>&address=<hex>  -> proposal, dispute, outcome, caller position,
+	// dispute-window timing, and a real should_dispute signal (not a placeholder).
+	mux.HandleFunc("/v1/query/dispute-context", func(w http.ResponseWriter, r *http.Request) {
+		marketHex := r.URL.Query().Get("market")
+		addrHex := r.URL.Query().Get("address")
+		if marketHex == "" {
+			http.Error(w, "missing required query param: market", http.StatusBadRequest)
+			return
+		}
+		marketId, err := hex.DecodeString(marketHex)
+		if err != nil {
+			http.Error(w, "invalid market: must be hex-encoded", http.StatusBadRequest)
+			return
+		}
+
+		reads := []*PluginKeyRead{
+			{QueryId: 1, Key: KeyForMarket(marketId)},
+			{QueryId: 2, Key: KeyForProposal(marketId)},
+			{QueryId: 3, Key: KeyForDispute(marketId)},
+			{QueryId: 4, Key: KeyForOutcome(marketId)},
+		}
+		var addr []byte
+		if addrHex != "" {
+			addr, err = hex.DecodeString(addrHex)
+			if err != nil {
+				http.Error(w, "invalid address: must be hex-encoded", http.StatusBadRequest)
+				return
+			}
+			reads = append(reads, &PluginKeyRead{QueryId: 5, Key: KeyForPosition(marketId, addr)})
+		}
+
+		resp, qErr := p.QueryState(0, &PluginStateReadRequest{Keys: reads})
+		if qErr != nil {
+			http.Error(w, qErr.Msg, http.StatusInternalServerError)
+			return
+		}
+
+		getEntry := func(qid uint64) []byte {
+			for _, res := range resp.Results {
+				if res.QueryId == qid && len(res.Entries) > 0 {
+					return res.Entries[0].Value
+				}
+			}
+			return nil
+		}
+
+		if v := getEntry(1); v == nil {
+			http.Error(w, "market not found", http.StatusNotFound)
+			return
+		}
+
+		mkt := &MarketState{}
+		Unmarshal(getEntry(1), mkt)
+
+		result := map[string]interface{}{
+			"market":      marketHex,
+			"status":      mkt.Status,
+			"expiry_time": mkt.ExpiryTime,
+			"question":    mkt.Question,
+		}
+
+		var proposal *ProposalRecord
+		hasProposal := false
+		if v := getEntry(2); v != nil {
+			proposal = &ProposalRecord{}
+			if err := Unmarshal(v, proposal); err == nil {
+				hasProposal = true
+				result["proposal"] = map[string]interface{}{
+					"resolver_addr":    hex.EncodeToString(proposal.ResolverAddr),
+					"proposed_outcome": proposal.ProposedOutcome,
+					"proposal_bond":    proposal.ProposalBond,
+					"proposal_block":   proposal.ProposalBlock,
+					"status":           proposal.Status,
+				}
+			}
+		}
+
+		var dispute *DisputeRecord
+		hasDispute := false
+		if v := getEntry(3); v != nil {
+			dispute = &DisputeRecord{}
+			if err := Unmarshal(v, dispute); err == nil {
+				hasDispute = true
+				var panelMembers []string
+				for _, m := range dispute.PanelMembers {
+					panelMembers = append(panelMembers, hex.EncodeToString(m))
+				}
+				result["dispute"] = map[string]interface{}{
+					"disputer_address": hex.EncodeToString(dispute.DisputerAddress),
+					"dispute_bond":     dispute.DisputeBond,
+					"dispute_block":    dispute.DisputeBlock,
+					"vote_status":      dispute.VoteStatus,
+					"panel_size":       dispute.PanelSize,
+					"panel_members":    panelMembers,
+				}
+			}
+		}
+
+		if v := getEntry(4); v != nil {
+			outcome := &OutcomeState{}
+			if err := Unmarshal(v, outcome); err == nil {
+				result["outcome"] = map[string]interface{}{
+					"winning_outcome": outcome.WinningOutcome,
+					"resolved_at":     outcome.ResolvedAt,
+				}
+			}
+		}
+
+		var pos *PositionState
+		hasPosition := false
+		if addr != nil {
+			if v := getEntry(5); v != nil {
+				pos = &PositionState{}
+				if err := Unmarshal(v, pos); err == nil {
+					hasPosition = true
+					result["your_position"] = map[string]interface{}{
+						"shares_yes": pos.SharesYes,
+						"shares_no":  pos.SharesNo,
+						"cost_paid":  pos.CostPaid,
+						"claimed":    pos.Claimed,
+					}
+				}
+			} else {
+				result["your_position"] = nil
+			}
+		}
+
+		disputeBlocks := MIN_DISPUTE_BLOCKS
+		if TEST_MODE {
+			disputeBlocks = TEST_DISPUTE_BLOCKS
+		}
+
+		now := GetGlobalHeight()
+		windowOpen := false
+		var deadline uint64
+		if hasProposal && !hasDispute && mkt.Status == STATUS_PROPOSED {
+			deadline = proposal.ProposalBlock + disputeBlocks
+			windowOpen = now > 0 && now < deadline
+			result["dispute_window"] = map[string]interface{}{
+				"open":           windowOpen,
+				"proposal_block": proposal.ProposalBlock,
+				"deadline_block": deadline,
+				"window_blocks":  disputeBlocks,
+				"current_height": now,
+			}
+		} else {
+			result["dispute_window"] = map[string]interface{}{"open": false}
+		}
+
+		shouldDispute := false
+		var reason string
+		switch {
+		case !hasProposal || hasDispute || mkt.Status != STATUS_PROPOSED:
+			reason = "no active proposal to dispute"
+		case now == 0:
+			reason = "current height unavailable"
+		case !windowOpen:
+			reason = "dispute window closed or not yet open"
+		case addr == nil:
+			reason = "no address provided \u2014 cannot evaluate position"
+		case !hasPosition || (pos.SharesYes == 0 && pos.SharesNo == 0):
+			reason = "address holds no position in this market"
+		case proposal.ProposedOutcome && pos.SharesYes > 0 && pos.SharesNo == 0:
+			reason = "your position agrees with the proposed outcome"
+		case !proposal.ProposedOutcome && pos.SharesNo > 0 && pos.SharesYes == 0:
+			reason = "your position agrees with the proposed outcome"
+		case proposal.ProposedOutcome && pos.SharesNo > 0:
+			shouldDispute = true
+			reason = "you hold NO shares but proposal resolves YES"
+		case !proposal.ProposedOutcome && pos.SharesYes > 0:
+			shouldDispute = true
+			reason = "you hold YES shares but proposal resolves NO"
+		default:
+			reason = "mixed or ambiguous position \u2014 evaluate manually"
+		}
+		result["should_dispute"] = shouldDispute
+		result["should_dispute_reason"] = reason
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	})
+
+	log.Printf("plugin RPC server listening on %s (routes: /v1/query/markets, /v1/query/positions, /v1/query/resolvers, /v1/query/proposals, /v1/query/disputes, /v1/query/votes, /v1/query/outcomes, /v1/query/slashes, /v1/query/position, /v1/query/account, /v1/query/unbonding, /v1/query/dispute-context)", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Printf("plugin RPC server error: %v", err)
 	}
