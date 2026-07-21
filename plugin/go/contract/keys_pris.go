@@ -18,7 +18,7 @@ package contract
 // ─────────────────────────────────────────────────────────────────────────────
 
 var (
-creatorFeePoolPrefix      = []byte{0x1D}
+creatorFeePoolPrefix      = []byte{0x15}
 resolverFeePoolPrefix     = []byte{0x1E}
 treasuryPoolPrefix        = []byte{0x1F}
 epochSnapshotPrefix       = []byte{0x20}
