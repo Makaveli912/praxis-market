@@ -194,7 +194,7 @@ window.toast=function(msg,isErr=false){
 // ═══════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════
-window.showPage=function(id,btn){
+window.showPage=function(id,btn,skipPush){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('#deskNav .ni').forEach(b=>b.classList.remove('active'));
@@ -208,6 +208,10 @@ window.showPage=function(id,btn){
   if(id==='resolvers')loadResolvers();
   closeNav();
   setTimeout(wireCopyBtns, 50);
+  if(!skipPush){
+    const _path = id === 'markets' ? '/' : '/' + id;
+    if(location.pathname !== _path) history.pushState({page:id}, '', _path);
+  }
 };
 
 // ═════════════════════════════════════════════
@@ -724,7 +728,11 @@ window.showDetail = function(marketId) {
   }
 
   const _pmidEl = document.getElementById('p_mid'); if (_pmidEl) _pmidEl.value = mid;
-  showPage('detail', null);
+  showPage('detail', null, true);
+  {
+    const _path = '/detail/' + encodeURIComponent(mid);
+    if(location.pathname !== _path) history.pushState({page:'detail', mid}, '', _path);
+  }
 
   // Hero image
   if (m) {
@@ -770,6 +778,43 @@ window.showDetail = function(marketId) {
   setTimeout(()=>switchDetailTab('activity'), 50);
 };
 window.openDetail = window.showDetail;
+
+// ═════════════════════════════════════════════
+// CLIENT-SIDE ROUTING
+// ═══════════════════════════════════════════
+const _VALID_PAGE_IDS = ['cancel', 'claim', 'claimcreator', 'commit', 'create', 'detail', 'dispute', 'finalize', 'forfeit', 'markets', 'node', 'profile', 'propose', 'reclaim', 'register', 'resolvers', 'reveal', 'search', 'slash', 'tally'];
+
+function _routeFromPath(path) {
+  if (path === '/' || path === '') return { id: 'markets' };
+  const detailMatch = path.match(/^\/detail\/(.+)$/);
+  if (detailMatch) return { id: 'detail', mid: decodeURIComponent(detailMatch[1]) };
+  const id = path.replace(/^\//, '');
+  if (_VALID_PAGE_IDS.includes(id)) return { id };
+  return { id: 'markets' };
+}
+
+window.addEventListener('popstate', function(e) {
+  const route = _routeFromPath(location.pathname);
+  if (route.id === 'detail' && route.mid) {
+    showDetail(route.mid);
+  } else {
+    showPage(route.id, null, true);
+  }
+});
+
+window.addEventListener('DOMContentLoaded', async function() {
+  const route = _routeFromPath(location.pathname);
+  if (route.id === 'detail' && route.mid) {
+    await loadMarkets();
+    showDetail(route.mid);
+  } else if (route.id !== 'markets') {
+    showPage(route.id, null, true);
+  }
+  // markets is already the default-visible page div in the HTML, and
+  // loadMarkets() already runs on its own startup path elsewhere, so no
+  // extra action needed when route.id === 'markets'.
+});
+
 
 window.fillP = (id, outcome) => {
   document.getElementById('p_mid').value = id;
