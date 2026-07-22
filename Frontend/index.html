@@ -2632,6 +2632,27 @@ function syncDots(alive) {
     if (el) el.textContent = txt;
   });
 }
+
+// Startup integrity check: if core scripts failed to fully load/parse
+// (common on unstable connections — a truncated script tag throws and
+// none of its functions get defined), auto-reload once instead of
+// leaving a silently broken UI.
+(function(){
+  const need = ['showPage','openNav','switchTab','loadMarkets'];
+  const missing = need.filter(fn => typeof window[fn] !== 'function');
+  if (missing.length) {
+    const key = 'praxis_reload_guard';
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1');
+      location.reload();
+    } else {
+      sessionStorage.removeItem(key);
+      const el = document.getElementById('marketsList');
+      if (el) el.innerHTML = '<div class="alert ar">⚠ Page failed to load fully (missing: ' + missing.join(', ') + '). Your connection may be unstable — tap to retry.<br><button class="btn bp" style="margin-top:8px" onclick="location.reload()">Retry</button></div>';
+    }
+  }
+})();
+
 setInterval(async () => {
   try {
     const r = await fetch((window.getRPC ? window.getRPC() : 'https://prax.val-a.grad.dev.app.canopynetwork.org/rpc') + '/v1/query/height', {method:'POST',body:'{}'});
