@@ -2527,6 +2527,37 @@ window.renderDetailChart = function(mid, range) {
   } catch(e) { if (emptyEl) emptyEl.style.display = ''; }
 };
 
+window.renderDisputeCountdown = async function(mid) {
+  const row = document.getElementById('det-dispute-row');
+  const el  = document.getElementById('det-dispute-val');
+  if (!row || !el || !mid) return;
+  row.style.display = 'none';
+  try {
+    const resp = await fetch(getPluginRPC() + '/v1/query/dispute-context?market=' + encodeURIComponent(mid));
+    if (!resp.ok) throw new Error('dispute-context query returned ' + resp.status);
+    const d = await resp.json();
+    const hasProposal = !!d.proposal;
+    if (!hasProposal) return;
+
+    const dw = d.dispute_window || {};
+    if (dw.open) {
+      const blocksLeft = Math.max(0, dw.deadline_block - dw.current_height);
+      const msLeft = blocksLeft * 5000;
+      const deadline = new Date(Date.now() + msLeft);
+      const dateStr = deadline.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+      const timeStr = deadline.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+      const hoursLeft = (msLeft / 3600000).toFixed(1);
+      el.innerHTML = '<span style="color:var(--green)">' + hoursLeft + 'h left</span> — closes ' + dateStr + ' ' + timeStr + ' (blk #' + dw.deadline_block + ')';
+    } else {
+      const reason = d.should_dispute_reason || 'window closed';
+      el.innerHTML = '<span style="color:var(--text3)">Closed</span> — ' + reason;
+    }
+    row.style.display = '';
+  } catch(e) {
+    console.warn('dispute countdown failed', e);
+  }
+};
+
 window.renderHoldersSidebar = function(mid, side) {
   side = side || 'yes';
   const el = document.getElementById('det-holders-list');

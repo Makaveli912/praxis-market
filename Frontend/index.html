@@ -1554,6 +1554,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
             <div class="det-info-row"><span class="det-info-lbl">Creator</span><span class="det-info-val mono g" id="det-creator">—</span></div>
             <div class="det-info-row"><span class="det-info-lbl">Expiry Block</span><span class="det-info-val mono" id="det-expiry-raw">—</span></div>
             <div class="det-info-row" id="det-resolver-row"><span class="det-info-lbl">Resolver</span><span class="det-info-val mono" id="det-resolver">—</span></div>
+            <div class="det-info-row" id="det-dispute-row" style="display:none"><span class="det-info-lbl">Dispute Window</span><span class="det-info-val mono" id="det-dispute-val">—</span></div>
           </div>
           <div id="det-rules-row" style="display:none;padding:14px 16px;border-top:1px solid var(--border)">
             <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">RESOLUTION CRITERIA</div>
@@ -2419,6 +2420,7 @@ window.switchDetailTab = function(tab) {
 // ── Render det-info pane from current market ──
 window.renderDetailInfo = function(mid) {
   if (!mid || !window._allMarkets) return;
+  if (typeof renderDisputeCountdown === 'function') renderDisputeCountdown(mid);
   const m = window._allMarkets.find(x => x.marketId === mid || x.txHash === mid);
   if (!m) return;
   const raw = m.rules || '';
