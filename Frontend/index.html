@@ -1973,8 +1973,8 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-a"><div class="ph-eye">Admin</div><div class="ph-title">Finalize Market</div><div class="ph-sub">Collect finalization bounty after the dispute window closes</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// finalize_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="fi_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Caller Address</label><input id="fi_addr" type="text" placeholder="40 hex chars"/></div></div>
-    <div class="field"><label>Fee (uPRX)</label><input id="fi_fee" type="number" value="10000"/></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="fin_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Caller Address</label><input id="fin_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="field"><label>Fee (uPRX)</label><input id="fin_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_finalize" onclick="signAndSubmit_finalize()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_finalize()">Build Payload</button></div>
     <div class="pend" id="pend_finalize"><span class="blink">▪▪▪</span> broadcasting…</div>
     <div class="pbox" id="fio"><div class="plbl">// unsigned_payload</div><textarea id="fip" readonly></textarea></div>
