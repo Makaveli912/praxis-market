@@ -1936,7 +1936,8 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 
 <div class="page" id="page-unstake-resolver">
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Unstake Resolver</div><div class="ph-sub">Begin 120,960-block unbonding period — partial or full exit</div></div>
-  <div class="card"><div class="ci">
+  <div id="un_status_card"></div>
+  <div class="card" id="un_form_card"><div class="ci">
     <div class="ct">// unstake_parameters</div>
     <div class="r2"><div class="field locked"><label>Resolver Address</label><input id="un_addr" type="text" readonly placeholder="40 hex chars"/></div><div class="field"><label>Amount (PRX) — 0 = full exit</label><input id="un_amount" type="number" value="0"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="un_fee" type="number" value="10000"/></div>
@@ -1948,7 +1949,8 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 
 <div class="page" id="page-claim-unbonded">
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Claim Unbonded Stake</div><div class="ph-sub">Release tokens after the 120,960-block unbonding period</div></div>
-  <div class="card"><div class="ci">
+  <div id="ub_status_card"></div>
+  <div class="card" id="ub_form_card"><div class="ci">
     <div class="ct">// claim_unbonded_parameters</div>
     <div class="field locked"><label>Resolver Address</label><input id="ub_addr" type="text" readonly placeholder="40 hex chars"/></div>
     <div class="field"><label>Fee (uPRX)</label><input id="ub_fee" type="number" value="10000"/></div>

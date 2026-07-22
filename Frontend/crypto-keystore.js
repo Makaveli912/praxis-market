@@ -231,6 +231,11 @@ function syncWalletPill(address) {
     }
     if (xId) { const xEl = document.getElementById(xId); if (xEl) xEl.style.display = address ? '' : 'none'; }
   });
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    if (activePage.id === 'page-unstake-resolver' && typeof renderMyResolverStatus === 'function') renderMyResolverStatus('unstake');
+    if (activePage.id === 'page-claim-unbonded' && typeof renderMyResolverStatus === 'function') renderMyResolverStatus('claim-unbonded');
+  }
 }
 
 window.handleWalletPillClick = function() {

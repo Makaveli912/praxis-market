@@ -190,6 +190,8 @@ window.showPage=function(id,btn,skipPush){
   if(id==='create'){updateCreateBreakdown();setTimeout(initExpiryDate,50);}
   if(id==='predict')updatePredictBreakdown();
   if(id==='resolvers')loadResolvers();
+  if(id==='unstake-resolver')renderMyResolverStatus('unstake');
+  if(id==='claim-unbonded')renderMyResolverStatus('claim-unbonded');
   closeNav();
   setTimeout(wireCopyBtns, 50);
   if(!skipPush){
@@ -2055,6 +2057,87 @@ window.loadResolvers=async function(){
     }).join('');
   }catch(e){el.innerHTML='<div class="alert ar">Error: '+esc(e.message)+'</div>';}
 };
+
+// ═══════════════════════════════════════════
+// RESOLVER SELF-STATUS (stake / unbonding / claimable)
+// ═══════════════════════════════════════════
+window.renderMyResolverStatus = async function(which) {
+  // which: 'unstake' or 'claim-unbonded'
+  const cardId = which === 'unstake' ? 'un_status_card' : 'ub_status_card';
+  const formId = which === 'unstake' ? 'un_form_card' : 'ub_form_card';
+  const cardEl = document.getElementById(cardId);
+  const formEl = document.getElementById(formId);
+  if (!cardEl || !formEl) return;
+
+  if (!signerAddress) {
+    cardEl.innerHTML = '<div class="alert ay">Connect a signer to see your resolver status.</div>';
+    formEl.style.display = 'none';
+    return;
+  }
+
+  cardEl.innerHTML = '<div class="loading"><span class="blink">▪ ▪ ▪</span>&nbsp;&nbsp;loading resolver status</div>';
+
+  try {
+    const resp = await fetch(getPluginRPC() + '/v1/query/resolvers');
+    if (!resp.ok) throw new Error('resolvers query returned ' + resp.status);
+    const raw = await resp.json();
+    const mine = (raw || []).find(r => {
+      const addr = r.resolver_address ? b2h(Uint8Array.from(atob(r.resolver_address), c => c.charCodeAt(0))) : '';
+      return addr.toLowerCase() === signerAddress.toLowerCase();
+    });
+
+    if (!mine) {
+      cardEl.innerHTML = '<div class="alert ay">No resolver record found for this address — not currently staked.</div>';
+      formEl.style.display = 'none';
+      return;
+    }
+
+    const stake = BigInt(mine.stake_amount || 0);
+    const unbondingAmt = BigInt(mine.unbonding_amount || 0);
+    const releaseHeight = Number(mine.unbonding_release_height || 0);
+    const curHeight = Number(window.currentHeight || 0);
+
+    if (unbondingAmt === 0n) {
+      // Staked, not unbonding
+      cardEl.innerHTML = '<div class="card" style="margin-bottom:16px"><div class="ci">' +
+        '<div class="ct">// your_resolver_status</div>' +
+        '<div class="igrid" style="grid-template-columns:1fr 1fr">' +
+        '<div class="icell"><div class="ilbl">Staked</div><div class="ival" style="color:var(--green)">' + fmtPRX(stake) + ' PRX</div></div>' +
+        '<div class="icell"><div class="ilbl">Status</div><div class="ival">Active</div></div>' +
+        '</div></div></div>';
+      formEl.style.display = '';
+    } else if (curHeight > 0 && curHeight < releaseHeight) {
+      // Unbonding — countdown
+      const blocksLeft = releaseHeight - curHeight;
+      const msLeft = blocksLeft * BLOCK_TIME_MS;
+      cardEl.innerHTML = '<div class="card" style="margin-bottom:16px"><div class="ci">' +
+        '<div class="ct">// your_resolver_status</div>' +
+        '<div class="igrid" style="grid-template-columns:1fr 1fr">' +
+        '<div class="icell"><div class="ilbl">Unbonding</div><div class="ival" style="color:var(--amber)">' + fmtPRX(unbondingAmt) + ' PRX</div></div>' +
+        '<div class="icell"><div class="ilbl">Unlocks in</div><div class="ival">' + fmtDuration(msLeft) + '</div></div>' +
+        '</div>' +
+        '<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--text3)">Releases at block #' + releaseHeight + '</div>' +
+        '</div></div>';
+      formEl.style.display = which === 'unstake' ? 'none' : 'none';
+      if (which === 'claim-unbonded') formEl.style.display = 'none';
+    } else {
+      // Unbonding complete — ready to claim
+      cardEl.innerHTML = '<div class="card" style="margin-bottom:16px;border-color:rgba(0,232,122,.3)"><div class="ci">' +
+        '<div class="ct">// your_resolver_status</div>' +
+        '<div class="igrid" style="grid-template-columns:1fr 1fr">' +
+        '<div class="icell"><div class="ilbl">Ready to claim</div><div class="ival" style="color:var(--green)">' + fmtPRX(unbondingAmt) + ' PRX</div></div>' +
+        '<div class="icell"><div class="ilbl">Status</div><div class="ival" style="color:var(--green)">Unlocked</div></div>' +
+        '</div>' +
+        (which === 'unstake' ? '<div style="margin-top:10px"><a href="#" onclick="showPage(\'claim-unbonded\',null);return false" class="btn bp" style="display:inline-block;text-decoration:none">Go to Claim Unbonded →</a></div>' : '') +
+        '</div></div>';
+      formEl.style.display = which === 'claim-unbonded' ? '' : 'none';
+    }
+  } catch (e) {
+    cardEl.innerHTML = '<div class="alert ar">Error loading resolver status: ' + esc(e.message) + '</div>';
+    formEl.style.display = '';
+  }
+};
+
 // ═══════════════════════════════════════════
 // MARKET DETAIL — ACTIVITY FEED + TOP HOLDERS
 // ═══════════════════════════════════════════
