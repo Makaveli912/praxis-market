@@ -54,9 +54,10 @@ window.clearKey=function(){
   document.getElementById('keyStatus').textContent='○ No key loaded';
   document.getElementById('sk_derived').style.display='none';
   const _ski=document.getElementById('sk_input');if(_ski)_ski.value='';
-  ['c_creator','p_bettor','r_resolver','cl_addr','s_from','w_addr','ft_addr',
-   'reg_addr','pr_resolver','dis_addr','cv_voter','rv_voter','tal_addr','fin_addr','sl_addr',
-   'fo_resolver','rc_addr','ccf_addr','can_addr','unst_addr','cub_addr'].forEach(id=>{
+  ['c_creator','p_bettor','cl_addr','s_from','w_addr',
+   'reg_addr','pr_resolver','di_addr','cv_addr','rv_addr','ta_addr','fin_addr','sl_addr',
+   'fo_resolver','rc_addr','cf_addr','can_addr','un_addr','ub_addr',
+   'rrw-addr','brw-addr','crw-addr','irw-addr','prw-addr'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   syncWalletPill(null);
@@ -201,9 +202,10 @@ function updateSignerUI() {
   document.getElementById('sk_derived').style.display = 'block';
   document.getElementById('sk_pub').textContent = b2h(signerPubKey);
   document.getElementById('sk_addr').textContent = signerAddress;
-  ['c_creator','p_bettor','r_resolver','cl_addr','s_from','w_addr','ft_addr',
-   'reg_addr','pr_resolver','dis_addr','cv_voter','rv_voter','tal_addr','fin_addr','sl_addr',
-   'fo_resolver','rc_addr','ccf_addr','can_addr','unst_addr','cub_addr'].forEach(id => {
+  ['c_creator','p_bettor','cl_addr','s_from','w_addr',
+   'reg_addr','pr_resolver','di_addr','cv_addr','rv_addr','ta_addr','fin_addr','sl_addr',
+   'fo_resolver','rc_addr','cf_addr','can_addr','un_addr','ub_addr',
+   'rrw-addr','brw-addr','crw-addr','irw-addr','prw-addr'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = signerAddress;
   });
   const badge = document.getElementById('sessBadge');

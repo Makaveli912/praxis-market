@@ -181,9 +181,10 @@ function _applyDerivedKey() {
 // ── Auto-fill address fields with derived address ──
 function autoFillAddresses(addr) {
   const fields = [
-    'c_creator','p_bettor','r_resolver','cl_addr','s_from','w_addr','ft_addr',
-    'reg_addr','pr_resolver','dis_addr','cv_voter','rv_voter','tal_addr','fin_addr','sl_addr',
-    'fo_resolver','rc_addr','ccf_addr','can_addr','unst_addr','cub_addr'
+    'c_creator','p_bettor','cl_addr','s_from','w_addr',
+    'reg_addr','pr_resolver','di_addr','cv_addr','rv_addr','ta_addr','fin_addr','sl_addr',
+    'fo_resolver','rc_addr','cf_addr','can_addr','un_addr','ub_addr',
+    'rrw-addr','brw-addr','crw-addr','irw-addr','prw-addr'
   ];
   fields.forEach(id => {
     const el = document.getElementById(id);

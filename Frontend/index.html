@@ -1649,7 +1649,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="alert ay">⚠ Forfeiting permanently exits your shares in this market. This cannot be undone.</div>
   <div class="card"><div class="ci">
     <div class="ct">// forfeit_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="fo_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Resolver Address</label><input id="fo_resolver" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="fo_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Resolver Address</label><input id="fo_resolver" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="fo_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_forfeit" onclick="signAndSubmit_forfeit()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_forfeit()">Build Payload</button></div>
     <div class="pend" id="pend_forfeit"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1695,7 +1695,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-g"><div class="ph-eye">Creator</div><div class="ph-title">Claim Creator Fee</div><div class="ph-sub">Collect accumulated fees from markets you created</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// creator_fee_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="cf_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Creator Address</label><input id="cf_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="cf_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Creator Address</label><input id="cf_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="cf_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_cf" onclick="signAndSubmit_claimcreator()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_claimcreator()">Build Payload</button></div>
     <div class="pend" id="pend_cf"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1876,7 +1876,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">File Dispute</div><div class="ph-sub">Challenge a proposed outcome during the dispute window</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// dispute_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="di_mid" type="text" placeholder="40 hex chars" oninput="updateDisputeRisk()"/></div><div class="field"><label>Disputer Address</label><input id="di_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="di_mid" type="text" placeholder="40 hex chars" oninput="updateDisputeRisk()"/></div><div class="field locked"><label>Disputer Address</label><input id="di_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div id="di_risk_box" style="display:none;margin-bottom:13px;padding:10px 14px;border-radius:var(--r);font-family:var(--mono);font-size:10px;line-height:1.7"></div>
     <div class="field"><label>Fee (uPRX)</label><input id="di_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_dispute" onclick="signAndSubmit_dispute()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_dispute()">Build Payload</button></div>
@@ -1889,7 +1889,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Commit Vote</div><div class="ph-sub">Submit a blinded commitment during the voting phase</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// commit_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="cv_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Voter Address</label><input id="cv_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="cv_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Voter Address</label><input id="cv_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="r2"><div class="field"><label>Commitment Hash (hex)</label><input id="cv_hash" type="text" placeholder="64 hex chars"/></div><div class="field"><label>Fee (uPRX)</label><input id="cv_fee" type="number" value="10000"/></div></div>
     <div class="brow"><button class="btn bp" id="btn_commit" onclick="signAndSubmit_commit()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_commit()">Build Payload</button></div>
     <div class="pend" id="pend_commit"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1901,7 +1901,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Reveal Vote</div><div class="ph-sub">Reveal your committed vote during the reveal phase</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// reveal_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="rv_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Voter Address</label><input id="rv_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="rv_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Voter Address</label><input id="rv_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="r2"><div class="field"><label>Vote (YES/NO)</label><div class="otog"><div class="obtn yes active" id="rv_btn_yes" onclick="setRevOut(true)">YES</div><div class="obtn no" id="rv_btn_no" onclick="setRevOut(false)">NO</div></div></div><div class="field"><label>Salt (hex)</label><input id="rv_salt" type="text" placeholder="32 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="rv_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_reveal" onclick="signAndSubmit_reveal()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_reveal()">Build Payload</button></div>
@@ -1914,7 +1914,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Tally Votes</div><div class="ph-sub">Trigger vote tallying after the reveal phase ends</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// tally_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="ta_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Caller Address</label><input id="ta_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="ta_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Caller Address</label><input id="ta_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="ta_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_tally" onclick="signAndSubmit_tally()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_tally()">Build Payload</button></div>
     <div class="pend" id="pend_tally"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1938,7 +1938,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Unstake Resolver</div><div class="ph-sub">Begin 120,960-block unbonding period — partial or full exit</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// unstake_parameters</div>
-    <div class="r2"><div class="field"><label>Resolver Address</label><input id="un_addr" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Amount (PRX) — 0 = full exit</label><input id="un_amount" type="number" value="0"/></div></div>
+    <div class="r2"><div class="field locked"><label>Resolver Address</label><input id="un_addr" type="text" readonly placeholder="40 hex chars"/></div><div class="field"><label>Amount (PRX) — 0 = full exit</label><input id="un_amount" type="number" value="0"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="un_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bamb" id="btn_unstake" onclick="signAndSubmit_unstake()">↓ Unstake</button><button class="btn bsec" onclick="build_unstake()">Build Payload</button></div>
     <div class="pend" id="pend_unstake"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1950,7 +1950,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Claim Unbonded Stake</div><div class="ph-sub">Release tokens after the 120,960-block unbonding period</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// claim_unbonded_parameters</div>
-    <div class="field"><label>Resolver Address</label><input id="ub_addr" type="text" placeholder="40 hex chars"/></div>
+    <div class="field locked"><label>Resolver Address</label><input id="ub_addr" type="text" readonly placeholder="40 hex chars"/></div>
     <div class="field"><label>Fee (uPRX)</label><input id="ub_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_ub" onclick="signAndSubmit_claimunbonded()">◎ Claim Unbonded</button><button class="btn bsec" onclick="build_claimunbonded()">Build Payload</button></div>
     <div class="pend" id="pend_ub"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -2054,7 +2054,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="card"><div class="ci">
     <div class="ct">// claim_resolver_reward</div>
     <div class="r2">
-      <div class="field"><label>Resolver Address</label><input id="rrw-addr" type="text" placeholder="40 hex chars"/></div>
+      <div class="field locked"><label>Resolver Address</label><input id="rrw-addr" type="text" readonly placeholder="40 hex chars"/></div>
       <div class="field"><label>Epoch Number</label><input id="rrw-epoch" type="number" placeholder="leave blank = current"/></div>
     </div>
     <div class="field"><label>Fee (uPRX)</label><input id="rrw-fee" type="number" value="10000"/></div>
@@ -2090,7 +2090,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     </div></div>
     <div class="card"><div class="ci">
       <div class="ct">// claim_builder_reward</div>
-      <div class="field"><label>Builder Address</label><input id="brw-addr" type="text" placeholder="40 hex chars"/></div>
+      <div class="field locked"><label>Builder Address</label><input id="brw-addr" type="text" readonly placeholder="40 hex chars"/></div>
       <div class="field"><label>Fee (uPRX)</label><input id="brw-fee" type="number" value="10000"/></div>
       <div class="brow"><button class="btn bp" id="btn_brw" onclick="signAndSubmit_rewardBuilder()">Sign &amp; Submit</button><button class="btn bsec" onclick="build_rewardBuilder()">Build Payload</button></div>
       <div class="pend" id="pend_brw"><span class="blink">...</span> broadcasting...</div>
@@ -2114,7 +2114,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   </div>
   <div class="card"><div class="ci">
     <div class="ct">// claim_community_reward</div>
-    <div class="field"><label>Claimant Address</label><input id="crw-addr" type="text" placeholder="40 hex chars"/></div>
+    <div class="field locked"><label>Claimant Address</label><input id="crw-addr" type="text" readonly placeholder="40 hex chars"/></div>
     <div class="field"><label>Fee (uPRX)</label><input id="crw-fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_crw" onclick="signAndSubmit_rewardCommunity()">Sign &amp; Submit</button><button class="btn bsec" onclick="build_rewardCommunity()">Build Payload</button></div>
     <div class="pend" id="pend_crw"><span class="blink">...</span> broadcasting...</div>
@@ -2138,7 +2138,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="rw-vesting">Vesting window: 241,920 blocks (~28 days). Rewards vest linearly.</div>
   <div class="card"><div class="ci">
     <div class="ct">// claim_investor_reward</div>
-    <div class="field"><label>Investor Address</label><input id="irw-addr" type="text" placeholder="40 hex chars"/></div>
+    <div class="field locked"><label>Investor Address</label><input id="irw-addr" type="text" readonly placeholder="40 hex chars"/></div>
     <div class="field"><label>Fee (uPRX)</label><input id="irw-fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_irw" onclick="signAndSubmit_rewardInvestor()">Sign &amp; Submit</button><button class="btn bsec" onclick="build_rewardInvestor()">Build Payload</button></div>
     <div class="pend" id="pend_irw"><span class="blink">...</span> broadcasting...</div>
@@ -2162,7 +2162,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     </div>
     <div class="card"><div class="ci">
       <div class="ct">// claim_protocol_reward</div>
-      <div class="field"><label>Claimant Address</label><input id="prw-addr" type="text" placeholder="40 hex chars"/></div>
+      <div class="field locked"><label>Claimant Address</label><input id="prw-addr" type="text" readonly placeholder="40 hex chars"/></div>
       <div class="field"><label>Fee (uPRX)</label><input id="prw-fee" type="number" value="10000"/></div>
       <div class="brow"><button class="btn bp" id="btn_prw" onclick="signAndSubmit_rewardProtocol()">Sign &amp; Submit</button><button class="btn bsec" onclick="build_rewardProtocol()">Build Payload</button></div>
       <div class="pend" id="pend_prw"><span class="blink">...</span> broadcasting...</div>
