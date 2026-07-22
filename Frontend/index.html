@@ -2165,10 +2165,10 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 
 <div id="toast"></div>
 
-<script src="rpc.js"></script>
-<script src="crypto-keystore.js"></script>
-<script src="app.js"></script>
-<script src="metamask-auth.js"></script>
+<script src="rpc.js" onerror="window.__rpcRetries=(window.__rpcRetries||0)+1;if(window.__rpcRetries<=2){document.write('<scr'+'ipt src="rpc.js?r='+window.__rpcRetries+'"><\/scr'+'ipt>');}"></script>
+<script src="crypto-keystore.js" onerror="window.__cksRetries=(window.__cksRetries||0)+1;if(window.__cksRetries<=2){document.write('<scr'+'ipt src="crypto-keystore.js?r='+window.__cksRetries+'"><\/scr'+'ipt>');}"></script>
+<script src="app.js" onerror="window.__appRetries=(window.__appRetries||0)+1;if(window.__appRetries<=2){document.write('<scr'+'ipt src="app.js?r='+window.__appRetries+'"><\/scr'+'ipt>');}"></script>
+<script src="metamask-auth.js" onerror="window.__mmRetries=(window.__mmRetries||0)+1;if(window.__mmRetries<=2){document.write('<scr'+'ipt src="metamask-auth.js?r='+window.__mmRetries+'"><\/scr'+'ipt>');}"></script>
 <script>
 // ── Category filter ──
 window._activeCat = 'all';
@@ -2633,23 +2633,16 @@ function syncDots(alive) {
   });
 }
 
-// Startup integrity check: if core scripts failed to fully load/parse
-// (common on unstable connections — a truncated script tag throws and
-// none of its functions get defined), auto-reload once instead of
-// leaving a silently broken UI.
+// Startup integrity check: each script above already retries itself
+// up to twice on load failure (see onerror handlers). If it's still
+// missing after those retries, it's a real, persistent failure worth
+// surfacing immediately — no blind full-page reload needed.
 (function(){
   const need = ['showPage','openNav','switchTab','loadMarkets'];
   const missing = need.filter(fn => typeof window[fn] !== 'function');
   if (missing.length) {
-    const key = 'praxis_reload_guard';
-    if (!sessionStorage.getItem(key)) {
-      sessionStorage.setItem(key, '1');
-      location.reload();
-    } else {
-      sessionStorage.removeItem(key);
-      const el = document.getElementById('marketsList');
-      if (el) el.innerHTML = '<div class="alert ar">⚠ Page failed to load fully (missing: ' + missing.join(', ') + '). Your connection may be unstable — tap to retry.<br><button class="btn bp" style="margin-top:8px" onclick="location.reload()">Retry</button></div>';
-    }
+    const el = document.getElementById('marketsList');
+    if (el) el.innerHTML = '<div class="alert ar">⚠ Some app scripts failed to load (missing: ' + missing.join(', ') + ') after automatic retries. Please check your connection and tap retry.<br><button class="btn bp" style="margin-top:8px" onclick="location.reload()">Retry</button></div>';
   }
 })();
 
