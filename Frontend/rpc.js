@@ -19,7 +19,17 @@ window.getRPC = getRPC;
 window.getPluginRPC = getPluginRPC;
 
 async function rpc(path,body={}){
-  const r=await fetch(getRPC()+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const _c=new AbortController();
+  const _t=setTimeout(()=>_c.abort(),10000);
+  let r;
+  try{
+    r=await fetch(getRPC()+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:_c.signal});
+  }catch(e){
+    if(e.name==='AbortError')throw new Error('RPC timed out after 10s: '+path);
+    throw e;
+  }finally{
+    clearTimeout(_t);
+  }
   const t=await r.text();if(!r.ok)throw new Error(`HTTP ${r.status}: ${t}`);
   try{return JSON.parse(t);}catch{return t;}
 }
