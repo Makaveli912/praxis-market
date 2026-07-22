@@ -1941,7 +1941,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     <div class="ct">// unstake_parameters</div>
     <div class="r2"><div class="field locked"><label>Resolver Address</label><input id="un_addr" type="text" readonly placeholder="40 hex chars"/></div><div class="field"><label>Amount (PRX) — 0 = full exit</label><input id="un_amount" type="number" value="0"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="un_fee" type="number" value="10000"/></div>
-    <div class="brow"><button class="btn bamb" id="btn_unstake" onclick="signAndSubmit_unstake()">↓ Unstake</button><button class="btn bsec" onclick="build_unstake()">Build Payload</button></div>
+    <div class="brow"><button class="btn bamb" id="btn_unstake" onclick="signAndSubmit_unstake_resolver()">↓ Unstake</button><button class="btn bsec" onclick="build_unstake_resolver()">Build Payload</button></div>
     <div class="pend" id="pend_unstake"><span class="blink">▪▪▪</span> broadcasting…</div>
     <div class="pbox" id="uno"><div class="plbl">// unsigned_payload</div><textarea id="unp" readonly></textarea></div>
   </div></div>
@@ -1954,7 +1954,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     <div class="ct">// claim_unbonded_parameters</div>
     <div class="field locked"><label>Resolver Address</label><input id="ub_addr" type="text" readonly placeholder="40 hex chars"/></div>
     <div class="field"><label>Fee (uPRX)</label><input id="ub_fee" type="number" value="10000"/></div>
-    <div class="brow"><button class="btn bp" id="btn_ub" onclick="signAndSubmit_claimunbonded()">◎ Claim Unbonded</button><button class="btn bsec" onclick="build_claimunbonded()">Build Payload</button></div>
+    <div class="brow"><button class="btn bp" id="btn_ub" onclick="signAndSubmit_claim_unbonded()">◎ Claim Unbonded</button><button class="btn bsec" onclick="build_claim_unbonded()">Build Payload</button></div>
     <div class="pend" id="pend_ub"><span class="blink">▪▪▪</span> broadcasting…</div>
     <div class="pbox" id="ubo"><div class="plbl">// unsigned_payload</div><textarea id="ubp" readonly></textarea></div>
   </div></div>
