@@ -1246,13 +1246,13 @@ function showConfirm(title, rows) {
     ],
     signAndSubmit_unstake_resolver: () => [
       'Unstake Resolver', [
-        ['Resolver', (document.getElementById('unst_addr')?.value||'').slice(0,16)+'…', ''],
-        ['Amount',   (parseInt(document.getElementById('unst_amount')?.value||0)).toLocaleString()+' PRX (0 = full exit)', ''],
+        ['Resolver', (document.getElementById('un_addr')?.value||'').slice(0,16)+'…', ''],
+        ['Amount',   (parseInt(document.getElementById('un_amount')?.value||0)).toLocaleString()+' PRX (0 = full exit)', ''],
       ]
     ],
     signAndSubmit_claim_unbonded: () => [
       'Claim Unbonded Stake', [
-        ['Resolver', (document.getElementById('cub_addr')?.value||'').slice(0,16)+'…', ''],
+        ['Resolver', (document.getElementById('ub_addr')?.value||'').slice(0,16)+'…', ''],
       ]
     ],
     signAndSubmit_send: () => [
@@ -1933,21 +1933,21 @@ window.signAndSubmit_cancel=async function(){
 // ═══════════════════════════════════════════
 window.build_unstake_resolver=function(){
   try{
-    const addr=document.getElementById('unst_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
-    const amount=parseInt(document.getElementById('unst_amount').value||'0');
+    const addr=document.getElementById('un_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
+    const amount=parseInt(document.getElementById('un_amount').value||'0');
     const amountU=BigInt(amount)*1000000n;
-    const fee=parseInt(document.getElementById('unst_fee').value)||10000;
+    const fee=parseInt(document.getElementById('un_fee').value)||10000;
     showPL('unsto','unstp',buildUnsigned('unstake_resolver','type.googleapis.com/types.MessageUnstakeResolver',encUnstakeResolver(addr,amountU),{fee}));
     toast('Payload built');
   }catch(e){toast(e.message,true);}
 };
 window.signAndSubmit_unstake_resolver=async function(){
   try{
-    const addr=document.getElementById('unst_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
-    const amount=parseInt(document.getElementById('unst_amount').value||'0');
+    const addr=document.getElementById('un_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
+    const amount=parseInt(document.getElementById('un_amount').value||'0');
     const amountU=BigInt(amount)*1000000n;
-    const fee=parseInt(document.getElementById('unst_fee').value)||10000;
-    await doSubmit('unstake_resolver','type.googleapis.com/types.MessageUnstakeResolver',encUnstakeResolver(addr,amountU),{fee},'btn_unstake_resolver','pend_unstake_resolver');
+    const fee=parseInt(document.getElementById('un_fee').value)||10000;
+    await doSubmit('unstake_resolver','type.googleapis.com/types.MessageUnstakeResolver',encUnstakeResolver(addr,amountU),{fee},'btn_unstake','pend_unstake');
   }catch(e){toast(e.message,true);}
 };
 
@@ -1956,17 +1956,17 @@ window.signAndSubmit_unstake_resolver=async function(){
 // ═══════════════════════════════════════════
 window.build_claim_unbonded=function(){
   try{
-    const addr=document.getElementById('cub_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
-    const fee=parseInt(document.getElementById('cub_fee').value)||10000;
+    const addr=document.getElementById('ub_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
+    const fee=parseInt(document.getElementById('ub_fee').value)||10000;
     showPL('cubo','cubp',buildUnsigned('claim_unbonded_stake','type.googleapis.com/types.MessageClaimUnbondedStake',encClaimUnbonded(addr),{fee}));
     toast('Payload built');
   }catch(e){toast(e.message,true);}
 };
 window.signAndSubmit_claim_unbonded=async function(){
   try{
-    const addr=document.getElementById('cub_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
-    const fee=parseInt(document.getElementById('cub_fee').value)||10000;
-    await doSubmit('claim_unbonded_stake','type.googleapis.com/types.MessageClaimUnbondedStake',encClaimUnbonded(addr),{fee},'btn_claim_unbonded','pend_claim_unbonded');
+    const addr=document.getElementById('ub_addr').value.trim().toLowerCase();addr40(addr,'Resolver');
+    const fee=parseInt(document.getElementById('ub_fee').value)||10000;
+    await doSubmit('claim_unbonded_stake','type.googleapis.com/types.MessageClaimUnbondedStake',encClaimUnbonded(addr),{fee},'btn_ub','pend_ub');
   }catch(e){toast(e.message,true);}
 };
 
