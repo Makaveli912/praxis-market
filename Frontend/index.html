@@ -526,6 +526,34 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 .sbadge:hover { background:var(--red); color:#fff; }
 .sbadge.hidden { display:none; }
 
+/* connected wallet pill */
+.wallet-pill {
+  margin:8px 18px 0;
+  padding:8px 10px;
+  background:var(--gdim);
+  border:1px solid rgba(0,232,122,.18);
+  border-radius:var(--r);
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--mono); font-size:10px;
+  cursor:pointer; transition:background .15s, border-color .15s;
+}
+.wallet-pill:hover { background:rgba(0,232,122,.1); border-color:var(--green); }
+.wallet-pill.disconnected { background:var(--surf2); border-color:var(--border2); cursor:default; }
+.wallet-pill .wp-dot { width:6px; height:6px; border-radius:50%; background:var(--text3); flex-shrink:0; }
+.wallet-pill.connected .wp-dot { background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s ease-in-out infinite; }
+.wallet-pill .wp-addr { color:var(--green); letter-spacing:.5px; overflow:hidden; text-overflow:ellipsis; }
+.wallet-pill.disconnected .wp-addr { color:var(--text2); }
+.wallet-pill .wp-x { margin-left:auto; color:var(--text3); font-size:11px; }
+.wallet-pill:hover .wp-x { color:var(--red); }
+
+/* locked (connected-address) form fields */
+.field.locked input {
+  color:var(--green); background:var(--gdim);
+  border-color:rgba(0,232,122,.2); cursor:default;
+}
+.field.locked label { display:flex; align-items:center; gap:6px; }
+.field.locked label::after { content:'· connected'; color:var(--green); text-transform:none; letter-spacing:0; font-size:9px; opacity:.8; }
+
 /* ── OFFLINE BANNER ── */
 #offBanner { display:none; position:sticky; top:0; z-index:50; background:rgba(255,64,96,.07); border-bottom:1px solid rgba(255,64,96,.2); padding:7px 18px; font-family:var(--mono); font-size:10px; color:var(--red); text-align:center; }
 #offBanner.show { display:block; }
@@ -1275,6 +1303,12 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     <span class="net-height" id="hBadge"></span>
   </div>
 
+  <div class="wallet-pill disconnected" id="walletPill" onclick="handleWalletPillClick()">
+    <div class="wp-dot" id="wpDot"></div>
+    <span class="wp-addr" id="wpAddr">Not connected</span>
+    <span class="wp-x" id="wpX" style="display:none">✕</span>
+  </div>
+
   <div class="nav">
     <div class="ns">Markets</div>
     <div class="ni active" data-p="markets"   onclick="showPage('markets',this)">  <span class="ni-ic">◈</span>Browse Markets</div>
@@ -1331,6 +1365,10 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="moblogo">PRAXIS</div>
   <div style="display:flex;align-items:center;gap:10px">
     <div class="conn-row"><div class="dot" id="rpcDotM"></div></div>
+    <div class="wallet-pill disconnected" id="walletPillM" onclick="handleWalletPillClick()" style="margin:0;padding:5px 8px">
+      <div class="wp-dot" id="wpDotM"></div>
+      <span class="wp-addr" id="wpAddrM" style="font-size:9px">Not connected</span>
+    </div>
     <button class="ham" onclick="openNav()" style="display:none">☰</button>
   </div>
 </div>
@@ -1570,7 +1608,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
       <!-- ACTION BUTTONS -->
       <div class="det-action-card" style="padding:12px;display:flex;flex-direction:column;gap:8px">
         <input id="p_mid" type="hidden"/>
-        <div class="field" style="margin:0 0 8px"><label>Bettor Address</label><input id="p_bettor" type="text" placeholder="40 hex chars" oninput="checkPositionCap()"/></div>
+        <div class="field locked" style="margin:0 0 8px"><label>Bettor Address</label><input id="p_bettor" type="text" readonly placeholder="40 hex chars" oninput="checkPositionCap()"/></div>
         <div class="field" style="margin:0 0 8px"><label>Outcome</label><div class="otog"><div class="obtn yes active" id="btn_yes" onclick="setOut(true)">YES</div><div class="obtn no" id="btn_no" onclick="setOut(false)">NO</div></div></div>
         <div class="field" style="margin:0 0 8px"><label>Shares (PRX)</label><input id="p_shares" type="number" value="1" oninput="updatePredictBreakdown()"/><div class="hint">Min 1 PRX</div></div>
         <div class="field" style="margin:0 0 8px"><label>Slippage <span id="p_slip_lbl" style="color:var(--green);font-size:10px">5.0%</span></label><input id="p_slippage" type="range" min="1" max="10" step="0.5" value="5" oninput="updatePredictBreakdown()" style="width:100%;accent-color:var(--green)"/></div>
@@ -1624,7 +1662,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-g"><div class="ph-eye">Collect Payout</div><div class="ph-title">Claim Winnings</div><div class="ph-sub">Proportional payout from losing pool after finalization</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// claim_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="cl_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Claimant Address</label><input id="cl_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="cl_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Claimant Address</label><input id="cl_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="cl_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_claim" onclick="signAndSubmit_claim()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_claim()">Build Payload</button></div>
     <div class="pend" id="pend_claim"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1638,7 +1676,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="alert ay">Only available if no resolver proposed an outcome within the resolution window.</div>
   <div class="card"><div class="ci">
     <div class="ct">// reclaim_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="rc_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Claimant Address</label><input id="rc_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="rc_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Claimant Address</label><input id="rc_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="rc_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_reclaim" onclick="signAndSubmit_reclaim()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_reclaim()">Build Payload</button></div>
     <div class="pend" id="pend_reclaim"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1671,7 +1709,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="alert ay">⚠ Cancellation is irreversible. All bettors can reclaim their stakes.</div>
   <div class="card"><div class="ci">
     <div class="ct">// cancel_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="can_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Creator Address</label><input id="can_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="can_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Creator Address</label><input id="can_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="can_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bamb" id="btn_cancel" onclick="signAndSubmit_cancel()">✕ Cancel Market</button><button class="btn bsec" onclick="build_cancel()">Build Payload</button></div>
     <div class="pend" id="pend_cancel"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1709,7 +1747,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 
   <div class="card"><div class="ci">
     <div class="ct">// balance_lookup</div>
-    <div class="field"><label>Address (40 hex)</label><input id="w_addr" type="text" placeholder="e7c7dad1…"/></div>
+    <div class="field locked"><label>Address (40 hex)</label><input id="w_addr" type="text" readonly placeholder="e7c7dad1…"/></div>
     <div class="brow"><button class="btn bp" onclick="queryAccount()">Query Balance</button></div>
     <div id="w_result" style="display:none;margin-top:15px">
       <div class="bal-wrap" style="display:flex;align-items:center;gap:14px">
@@ -1725,7 +1763,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
 
   <div class="card"><div class="ci">
     <div class="ct">// send_prx</div>
-    <div class="r2"><div class="field"><label>From Address</label><input id="s_from" type="text" placeholder="40 hex chars"/></div><div class="field"><label>To Address</label><input id="s_to" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field locked"><label>From Address</label><input id="s_from" type="text" readonly placeholder="40 hex chars"/></div><div class="field"><label>To Address</label><input id="s_to" type="text" placeholder="40 hex chars"/></div></div>
     <div class="r2"><div class="field"><label>Amount (PRX)</label><input id="s_amount" type="number" value="1"/></div><div class="field"><label>Fee (uPRX)</label><input id="s_fee" type="number" value="10000"/></div></div>
     <div class="brow"><button class="btn bp" id="btn_send" onclick="signAndSubmit_send()">⚡ Send $PRX</button><button class="btn bsec" onclick="build_send()">Build Payload</button></div>
     <div class="pend" id="pend_send"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1810,7 +1848,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Register as Resolver</div><div class="ph-sub">Stake $PRX to earn resolution fees — minimum 500,000 PRX</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// register_parameters</div>
-    <div class="r2"><div class="field"><label>Resolver Address</label><input id="reg_addr" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Stake Amount (PRX)</label><input id="reg_stake" type="number" value="500000" oninput="updateRegisterBreakdown()"/></div></div>
+    <div class="r2"><div class="field locked"><label>Resolver Address</label><input id="reg_addr" type="text" readonly placeholder="40 hex chars"/></div><div class="field"><label>Stake Amount (PRX)</label><input id="reg_stake" type="number" value="500000" oninput="updateRegisterBreakdown()"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="reg_fee" type="number" value="10000"/></div>
     <div id="register_breakdown" class="breakdown"></div>
     <div class="brow"><button class="btn bp" id="btn_register" onclick="signAndSubmit_register()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_register()">Build Payload</button></div>
@@ -1823,7 +1861,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Propose Outcome</div><div class="ph-sub">Submit your resolution after market expiry</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// propose_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="pr_mid" type="text" placeholder="40 hex chars" oninput="updateProposeRisk()"/></div><div class="field"><label>Resolver Address</label><input id="pr_resolver" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="pr_mid" type="text" placeholder="40 hex chars" oninput="updateProposeRisk()"/></div><div class="field locked"><label>Resolver Address</label><input id="pr_resolver" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Proposed Outcome</label><div class="otog"><div class="obtn yes active" id="pr_btn_yes" onclick="setPropOut(true)">YES</div><div class="obtn no" id="pr_btn_no" onclick="setPropOut(false)">NO</div></div></div>
     <div id="pr_risk_box" style="display:none;margin-bottom:13px;padding:10px 14px;border-radius:var(--r);font-family:var(--mono);font-size:10px;line-height:1.7"></div>
     <div class="field"><label>Proposal Bond (PRX)</label><input id="pr_bond" type="number" value="60"/><div class="hint" id="prop_bond_hint">Enter Market ID to compute min bond</div></div>
@@ -1888,7 +1926,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-r"><div class="ph-eye">Resolver</div><div class="ph-title">Claim Slash</div><div class="ph-sub">Claim slashed stake from a penalized resolver</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// slash_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="sl_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Claimant Address</label><input id="sl_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="sl_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Claimant Address</label><input id="sl_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="sl_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_slash" onclick="signAndSubmit_slash()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_slash()">Build Payload</button></div>
     <div class="pend" id="pend_slash"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1943,7 +1981,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
       </div>
       <div class="hint">Use for two-way matchups (Team A vs Team B). Leave blank for standard YES/NO markets.</div>
     </div>
-    <div class="r2"><div class="field"><label>Creator Address</label><input id="c_creator" type="text" placeholder="40 hex chars"/></div><div class="field"><label>B0 Liquidity (PRX)</label><input id="c_b0" type="number" value="60" oninput="updateCreateBreakdown()"/></div></div>
+    <div class="r2"><div class="field locked"><label>Creator Address</label><input id="c_creator" type="text" readonly placeholder="40 hex chars"/></div><div class="field"><label>B0 Liquidity (PRX)</label><input id="c_b0" type="number" value="60" oninput="updateCreateBreakdown()"/></div></div>
     <div class="r2">
       <div class="field">
         <label>Expiry Date &amp; Time</label>
@@ -1974,7 +2012,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="ph ph-a"><div class="ph-eye">Admin</div><div class="ph-title">Finalize Market</div><div class="ph-sub">Collect finalization bounty after the dispute window closes</div></div>
   <div class="card"><div class="ci">
     <div class="ct">// finalize_parameters</div>
-    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="fin_mid" type="text" placeholder="40 hex chars"/></div><div class="field"><label>Caller Address</label><input id="fin_addr" type="text" placeholder="40 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="fin_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Caller Address</label><input id="fin_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="fin_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_finalize" onclick="signAndSubmit_finalize()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_finalize()">Build Payload</button></div>
     <div class="pend" id="pend_finalize"><span class="blink">▪▪▪</span> broadcasting…</div>

@@ -181,15 +181,15 @@ function _applyDerivedKey() {
 // ── Auto-fill address fields with derived address ──
 function autoFillAddresses(addr) {
   const fields = [
-    'p_bettor','cl_addr','rc_addr','fo_resolver',
-    'reg_addr','pr_resolver','di_addr','cv_addr',
-    'rv_addr','un_addr','ub_addr','cf_addr','w_addr',
-    's_from','fi_addr','ta_addr','sl_addr'
+    'c_creator','p_bettor','r_resolver','cl_addr','s_from','w_addr','ft_addr',
+    'reg_addr','pr_resolver','dis_addr','cv_voter','rv_voter','tal_addr','fin_addr','sl_addr',
+    'fo_resolver','rc_addr','ccf_addr','can_addr','unst_addr','cub_addr'
   ];
   fields.forEach(id => {
     const el = document.getElementById(id);
-    if (el && !el.value) el.value = addr;
+    if (el) el.value = addr;
   });
+  if (typeof syncWalletPill === 'function') syncWalletPill(addr);
 }
 
 // ── Disconnect ──
@@ -210,6 +210,13 @@ window.disconnectMetaMaskBLS = function() {
   if (ks) { ks.className = 'kstat'; ks.textContent = 'No key loaded'; }
   const ki = document.getElementById('keyInfo');
   if (ki) ki.style.display = 'none';
+
+  ['c_creator','p_bettor','r_resolver','cl_addr','s_from','w_addr','ft_addr',
+   'reg_addr','pr_resolver','dis_addr','cv_voter','rv_voter','tal_addr','fin_addr','sl_addr',
+   'fo_resolver','rc_addr','ccf_addr','can_addr','unst_addr','cub_addr'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  if (typeof syncWalletPill === 'function') syncWalletPill(null);
 
   toast('Wallet disconnected');
 };

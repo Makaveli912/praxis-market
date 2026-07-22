@@ -54,6 +54,12 @@ window.clearKey=function(){
   document.getElementById('keyStatus').textContent='○ No key loaded';
   document.getElementById('sk_derived').style.display='none';
   const _ski=document.getElementById('sk_input');if(_ski)_ski.value='';
+  ['c_creator','p_bettor','r_resolver','cl_addr','s_from','w_addr','ft_addr',
+   'reg_addr','pr_resolver','dis_addr','cv_voter','rv_voter','tal_addr','fin_addr','sl_addr',
+   'fo_resolver','rc_addr','ccf_addr','can_addr','unst_addr','cub_addr'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  syncWalletPill(null);
   toast('Key cleared');
   const badge=document.getElementById('sessBadge');
   if(badge)badge.classList.add('hidden');
@@ -198,14 +204,38 @@ function updateSignerUI() {
   ['c_creator','p_bettor','r_resolver','cl_addr','s_from','w_addr','ft_addr',
    'reg_addr','pr_resolver','dis_addr','cv_voter','rv_voter','tal_addr','fin_addr','sl_addr',
    'fo_resolver','rc_addr','ccf_addr','can_addr','unst_addr','cub_addr'].forEach(id => {
-    const el = document.getElementById(id); if (el && !el.value) el.value = signerAddress;
+    const el = document.getElementById(id); if (el) el.value = signerAddress;
   });
   const badge = document.getElementById('sessBadge');
   if (badge) badge.classList.remove('hidden');
+  syncWalletPill(signerAddress);
   refreshBalance();
   loadMyPredictions();
   injectKeyboardCopyBtns();
   setTimeout(wireCopyBtns, 100);
   checkRoles();
 }
+
+function syncWalletPill(address) {
+  const short = address ? address.slice(0,8) + '…' + address.slice(-6) : 'Not connected';
+  [['walletPill','wpAddr','wpDot','wpX'], ['walletPillM','wpAddrM','wpDotM',null]].forEach(([pillId, addrId, dotId, xId]) => {
+    const pill = document.getElementById(pillId);
+    const addrEl = document.getElementById(addrId);
+    const dotEl = document.getElementById(dotId);
+    if (addrEl) addrEl.textContent = short;
+    if (pill) {
+      pill.classList.toggle('connected', !!address);
+      pill.classList.toggle('disconnected', !address);
+    }
+    if (xId) { const xEl = document.getElementById(xId); if (xEl) xEl.style.display = address ? '' : 'none'; }
+  });
+}
+
+window.handleWalletPillClick = function() {
+  if (signerAddress) {
+    if (confirm('Disconnect wallet ' + signerAddress.slice(0,10) + '…?')) clearKey();
+  } else {
+    showPage('profile', document.querySelector('[data-p="profile"]'));
+  }
+};
 
