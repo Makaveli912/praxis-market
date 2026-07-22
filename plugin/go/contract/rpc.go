@@ -765,6 +765,7 @@ func (p *Plugin) StartRPCServer() {
 			"market":      marketHex,
 			"status":      mkt.Status,
 			"expiry_time": mkt.ExpiryTime,
+			"open_time":   mkt.OpenTime,
 			"question":    mkt.Question,
 		}
 
@@ -834,7 +835,7 @@ func (p *Plugin) StartRPCServer() {
 			}
 		}
 
-		disputeBlocks := MIN_DISPUTE_BLOCKS
+		disputeBlocks := ComputeDisputeBlocks(mkt.OpenTime, mkt.ExpiryTime)
 		if TEST_MODE {
 			disputeBlocks = TEST_DISPUTE_BLOCKS
 		}
