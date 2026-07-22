@@ -3,11 +3,12 @@
 // BLS
 // ═══════════════════════════════════════════
 let bls12_381 = null;
-(async () => {
+window.blsReady = (async () => {
   for (const url of ['https://esm.sh/@noble/curves@1.4.2/bls12-381','https://cdn.skypack.dev/@noble/curves@1.4.2/bls12-381']) {
     try { const m = await import(url); bls12_381 = m.bls12_381; break; } catch {}
   }
   if (!bls12_381) toast('BLS library failed to load — check internet', true);
+  return bls12_381;
 })();
 
 // ═══════════════════════════════════════════

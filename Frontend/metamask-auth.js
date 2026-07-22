@@ -254,8 +254,8 @@ function updateMMStatus(msg) {
 
 // ── Auto-reconnect on page load if ETH address stored ──
 window.addEventListener('load', async () => {
-  // Wait for BLS to load
-  await new Promise(r => setTimeout(r, 1500));
+  // Wait for BLS to actually finish loading (or fail), no matter how long it takes
+  await window.blsReady;
 
   if (!window.ethereum) return;
   try {
