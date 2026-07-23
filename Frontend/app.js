@@ -362,7 +362,7 @@ window.loadMyPredictions = async function () {
     }
 
     el.innerHTML = predictions.map(p => {
-      const m = _allMarkets.find(x => x.id === p.marketId);
+      const m = window._allMarkets.find(x => x.id === p.marketId);
       let payoutHtml = '';
       if (m && m.status === 6) {
         // finalized — compute expected payout
@@ -414,11 +414,11 @@ function resolverTier(addr) {
 // ── Volume chip updater ──
 
 // store markets globally for detail view
-let _allMarkets = [];
+window._allMarkets = [];
 let _resolverRegistry = new Map();
 
 window.showDetail = function(marketId) {
-  const m = _allMarkets.find(x => x.marketId === marketId || x.txHash === marketId);
+  const m = window._allMarkets.find(x => x.marketId === marketId || x.txHash === marketId);
   if (!m) return;
   const open = m.status === 0;
   const expired = m.status === 8;
@@ -714,11 +714,11 @@ window.fillC = id => { document.getElementById('cl_mid').value = id; showPage('c
 // ═══════════════════════════════════════════
 function decVarint(buf,pos){let r=0n,s=0n;while(pos<buf.length){const b=BigInt(buf[pos++]);r|=(b&0x7fn)<<s;s+=7n;if(!(b&0x80n))break;}return{v:r,p:pos};}
 
-let _activeTab = 'live';
+window._activeTab = 'live';
 const CLOSED_WINDOW = 20000; // blocks
 
 window.switchTab = function(tab) {
-  _activeTab = tab;
+  window._activeTab = tab;
   window._activeTab = tab;
   document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('tab-' + tab);
@@ -728,27 +728,27 @@ window.switchTab = function(tab) {
 
 function renderCurrentTab() {
   const el = document.getElementById('marketsList');
-  if (!_allMarkets.length) return;
+  if (!window._allMarkets.length) return;
 
   let markets;
-  if (_activeTab === 'live') {
-    markets = _allMarkets.filter(m => m.status === 0);
-  } else if (_activeTab === 'proposed') {
-    markets = _allMarkets.filter(m => m.status === 4 || m.status === 5);
+  if (window._activeTab === 'live') {
+    markets = window._allMarkets.filter(m => m.status === 0);
+  } else if (window._activeTab === 'proposed') {
+    markets = window._allMarkets.filter(m => m.status === 4 || m.status === 5);
   } else {
     // closed — rolling window of last CLOSED_WINDOW blocks
-    markets = _allMarkets.filter(m =>
+    markets = window._allMarkets.filter(m =>
       (m.status === 8 || m.status === 1 || m.status === 6 || m.status === 7 || m.status === 2 || m.status === 3) &&
       m.expiry && Number(m.expiry) >= (window.currentHeight - CLOSED_WINDOW)
     );
   }
 
   const countEl = document.getElementById('sb_c');
-  if (countEl) countEl.textContent = _allMarkets.filter(m => m.status === 0).length;
+  if (countEl) countEl.textContent = window._allMarkets.filter(m => m.status === 0).length;
 
   if (markets.length === 0) {
     const labels = {live:'No open markets yet', proposed:'No markets awaiting resolution', closed:'No recently closed markets'};
-    el.innerHTML = '<div class="alert ay">' + (labels[_activeTab] || 'No markets') + '</div>';
+    el.innerHTML = '<div class="alert ay">' + (labels[window._activeTab] || 'No markets') + '</div>';
     return;
   }
   let bookmarks = [];
@@ -807,7 +807,7 @@ window.loadMarkets = async function () {
       };
     });
 
-    _allMarkets = markets;
+    window._allMarkets = markets;
     window._allMarkets = markets;
     checkRoles();
     renderCurrentTab();
@@ -1476,7 +1476,7 @@ async function checkRoles() {
   document.querySelectorAll('.nav-admin-item').forEach(el => el.style.display = 'none');
 
   // Check RESOLVER — has a register_resolver tx in scanned data
-  const isResolver = _allMarkets.length >= 0 && (() => {
+  const isResolver = window._allMarkets.length >= 0 && (() => {
     const cache = localStorage.getItem('praxis_tx_cache');
     if (!cache) return false;
     try {
@@ -1509,8 +1509,8 @@ window.checkPositionCap = async function() {
     return;
   }
 
-  // find market in _allMarkets
-  const m = _allMarkets.find(x => x.marketId === mid || x.txHash === mid);
+  // find market in window._allMarkets
+  const m = window._allMarkets.find(x => x.marketId === mid || x.txHash === mid);
   if (!m) { capEl.style.display = 'none'; return; }
 
   const pool = Number(m.qYes + m.qNo);
@@ -1589,7 +1589,7 @@ window.updateMinBondHint = function() {
     hint.style.color = '';
     return;
   }
-  const m = _allMarkets.find(x => x.marketId === mid || x.txHash === mid);
+  const m = window._allMarkets.find(x => x.marketId === mid || x.txHash === mid);
   if (!m) {
     hint.textContent = 'Market not found in cache — browse Markets first';
     hint.style.color = 'var(--red)';
@@ -1615,7 +1615,7 @@ const ELEVATED_PANEL_SIZE = 7;
 
 function getRiskInfo(mid) {
   if (!mid || mid.length !== 40) return null;
-  const m = (_allMarkets || []).find(x => x.marketId === mid || x.txHash === mid);
+  const m = (window._allMarkets || []).find(x => x.marketId === mid || x.txHash === mid);
   if (!m) return null;
   const pool = m.qYes + m.qNo;
   const elevated = pool >= ELEVATED_RISK_THRESHOLD;
@@ -2160,7 +2160,7 @@ window.renderActivityFeed = function(mid) {
     });
 
     // also include the create_market TX for this market
-    const createTx = txs.find(tx => tx.messageType==='create_market' && _allMarkets.find(m=>m.marketId===mid&&m.txHash===tx.txHash));
+    const createTx = txs.find(tx => tx.messageType==='create_market' && window._allMarkets.find(m=>m.marketId===mid&&m.txHash===tx.txHash));
     if(createTx && !relevant.includes(createTx)) relevant.unshift(createTx);
 
     relevant.sort((a,b)=>(b.height||0)-(a.height||0));
@@ -2494,7 +2494,7 @@ window.runSearch = function() {
   const q = (document.getElementById('srch-input')?.value || '').trim().toLowerCase();
   const out = document.getElementById('srch-results');
   if (!out) return;
-  const markets = _allMarkets || [];
+  const markets = window._allMarkets || [];
   if (!q && _srchCat === 'all') {
     out.innerHTML = '<div style="color:var(--text3);font-family:var(--mono);font-size:11px;text-align:center;padding:40px 0">Type to search markets</div>';
     return;
