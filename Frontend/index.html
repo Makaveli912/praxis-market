@@ -1878,6 +1878,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
     <div class="ct">// dispute_parameters</div>
     <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="di_mid" type="text" placeholder="40 hex chars" oninput="updateDisputeRisk()"/></div><div class="field locked"><label>Disputer Address</label><input id="di_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
     <div id="di_risk_box" style="display:none;margin-bottom:13px;padding:10px 14px;border-radius:var(--r);font-family:var(--mono);font-size:10px;line-height:1.7"></div>
+    <div class="field"><label>Bond Amount (PRX)</label><input id="dis_bond" type="number" placeholder="Any amount > 0"/><div class="hint">Forfeited if your dispute is rejected — choose an amount you can afford to lose.</div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="di_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_dispute" onclick="signAndSubmit_dispute()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_dispute()">Build Payload</button></div>
     <div class="pend" id="pend_dispute"><span class="blink">▪▪▪</span> broadcasting…</div>
@@ -1902,7 +1903,7 @@ code { font-family:var(--mono); font-size:11px; background:var(--bg2); padding:1
   <div class="card"><div class="ci">
     <div class="ct">// reveal_parameters</div>
     <div class="r2"><div class="field"><label>Market ID (40 hex)</label><input id="rv_mid" type="text" placeholder="40 hex chars"/></div><div class="field locked"><label>Voter Address</label><input id="rv_addr" type="text" readonly placeholder="40 hex chars"/></div></div>
-    <div class="r2"><div class="field"><label>Vote (YES/NO)</label><div class="otog"><div class="obtn yes active" id="rv_btn_yes" onclick="setRevOut(true)">YES</div><div class="obtn no" id="rv_btn_no" onclick="setRevOut(false)">NO</div></div></div><div class="field"><label>Salt (hex)</label><input id="rv_salt" type="text" placeholder="32 hex chars"/></div></div>
+    <div class="r2"><div class="field"><label>Vote (YES/NO)</label><div class="otog"><div class="obtn yes active" id="rv_btn_yes" onclick="setRevOut(true)">YES</div><div class="obtn no" id="rv_btn_no" onclick="setRevOut(false)">NO</div></div></div><div class="field"><label>Salt (hex)</label><input id="rv_salt" type="text" placeholder="64 hex chars"/></div></div>
     <div class="field"><label>Fee (uPRX)</label><input id="rv_fee" type="number" value="10000"/></div>
     <div class="brow"><button class="btn bp" id="btn_reveal" onclick="signAndSubmit_reveal()">⚡ Sign &amp; Submit</button><button class="btn bsec" onclick="build_reveal()">Build Payload</button></div>
     <div class="pend" id="pend_reveal"><span class="blink">▪▪▪</span> broadcasting…</div>

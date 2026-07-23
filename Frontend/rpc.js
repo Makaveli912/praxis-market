@@ -67,7 +67,7 @@ window.checkRPC=async function(){
     return false;
   }
 };
-window.applyHost=function(){const h=document.getElementById('ni_host').value.trim();if(h)localStorage.setItem('praxis_rpc_host',h);checkRPC();toast('Connecting to '+h+'…');};
+window.applyHost=function(){const h=document.getElementById('rpc_url').value.trim();if(h)localStorage.setItem('praxis_rpc_host',h);checkRPC();toast('Connecting to '+h+'…');};
 
 window.queryAccount=async function(){
   const addr=document.getElementById('w_addr').value.trim().toLowerCase();

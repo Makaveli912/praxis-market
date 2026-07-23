@@ -242,8 +242,8 @@ updateTL();
 // OUTCOME TOGGLES
 // ═══════════════════════════════════════════
 window.setOut=function(v){selectedOut=v;document.getElementById('btn_yes').className='obtn yes'+(v?' active':'');document.getElementById('btn_no').className='obtn no'+(!v?' active':'');};
-window.setPropOut=function(v){propOut=v;document.getElementById('pbtn_yes').className='obtn yes'+(v?' active':'');document.getElementById('pbtn_no').className='obtn no'+(!v?' active':'');};
-window.setRevOut=function(v){revOut=v;document.getElementById('rvbtn_yes').className='obtn yes'+(v?' active':'');document.getElementById('rvbtn_no').className='obtn no'+(!v?' active':'');};
+window.setPropOut=function(v){propOut=v;document.getElementById('pr_btn_yes').className='obtn yes'+(v?' active':'');document.getElementById('pr_btn_no').className='obtn no'+(!v?' active':'');};
+window.setRevOut=function(v){revOut=v;document.getElementById('rv_btn_yes').className='obtn yes'+(v?' active':'');document.getElementById('rv_btn_no').className='obtn no'+(!v?' active':'');};
 
 // ═══════════════════════════════════════════
 // SIGNER
@@ -975,31 +975,31 @@ window.signAndSubmit_propose=async function(){try{
 
 // ── FILE DISPUTE
 window.build_dispute=function(){try{
-  const mid=document.getElementById('dis_mid').value.trim().toLowerCase();mid40(mid);
-  const addr=document.getElementById('dis_addr').value.trim().toLowerCase();addr40(addr,'Disputer');
+  const mid=document.getElementById('di_mid').value.trim().toLowerCase();mid40(mid);
+  const addr=document.getElementById('di_addr').value.trim().toLowerCase();addr40(addr,'Disputer');
   const bond=parseInt(document.getElementById('dis_bond').value)*1000000;
-  const fee=parseInt(document.getElementById('dis_fee').value)||10000;
+  const fee=parseInt(document.getElementById('di_fee').value)||10000;
   showPL('diso','disp',buildUnsigned('file_dispute','type.googleapis.com/types.MessageFileDispute',encDispute(mid,addr,bond),{fee}));toast('Payload built');
 }catch(e){toast(e.message,true);}};
 window.signAndSubmit_dispute=async function(){try{
-  const mid=document.getElementById('dis_mid').value.trim().toLowerCase();mid40(mid);
-  const addr=document.getElementById('dis_addr').value.trim().toLowerCase();addr40(addr,'Disputer');
+  const mid=document.getElementById('di_mid').value.trim().toLowerCase();mid40(mid);
+  const addr=document.getElementById('di_addr').value.trim().toLowerCase();addr40(addr,'Disputer');
   const bond=parseInt(document.getElementById('dis_bond').value)*1000000;
-  const fee=parseInt(document.getElementById('dis_fee').value)||10000;
+  const fee=parseInt(document.getElementById('di_fee').value)||10000;
   await doSubmit('file_dispute','type.googleapis.com/types.MessageFileDispute',encDispute(mid,addr,bond),{fee},'btn_dispute','pend_dispute');
 }catch(e){toast(e.message,true);}};
 
 // ── COMMIT VOTE
 window.build_commit=function(){try{
   const mid=document.getElementById('cv_mid').value.trim().toLowerCase();mid40(mid);
-  const voter=document.getElementById('cv_voter').value.trim().toLowerCase();addr40(voter,'Voter');
+  const voter=document.getElementById('cv_addr').value.trim().toLowerCase();addr40(voter,'Voter');
   const hash=document.getElementById('cv_hash').value.trim().toLowerCase();if(hash.length!==64)throw new Error('Commit hash must be 64 hex chars');
   const fee=parseInt(document.getElementById('cv_fee').value)||10000;
   showPL('cvo','cvp',buildUnsigned('commit_vote','type.googleapis.com/types.MessageCommitVote',encCommit(mid,voter,hash),{fee}));toast('Payload built');
 }catch(e){toast(e.message,true);}};
 window.signAndSubmit_commit=async function(){try{
   const mid=document.getElementById('cv_mid').value.trim().toLowerCase();mid40(mid);
-  const voter=document.getElementById('cv_voter').value.trim().toLowerCase();addr40(voter,'Voter');
+  const voter=document.getElementById('cv_addr').value.trim().toLowerCase();addr40(voter,'Voter');
   const hash=document.getElementById('cv_hash').value.trim().toLowerCase();if(hash.length!==64)throw new Error('Commit hash must be 64 hex chars');
   const fee=parseInt(document.getElementById('cv_fee').value)||10000;
   await doSubmit('commit_vote','type.googleapis.com/types.MessageCommitVote',encCommit(mid,voter,hash),{fee},'btn_commit','pend_commit');
@@ -1008,30 +1008,30 @@ window.signAndSubmit_commit=async function(){try{
 // ── REVEAL VOTE
 window.build_reveal=function(){try{
   const mid=document.getElementById('rv_mid').value.trim().toLowerCase();mid40(mid);
-  const voter=document.getElementById('rv_voter').value.trim().toLowerCase();addr40(voter,'Voter');
-  const nonce=document.getElementById('rv_nonce').value.trim().toLowerCase();if(nonce.length!==64)throw new Error('Nonce must be 64 hex chars');
+  const voter=document.getElementById('rv_addr').value.trim().toLowerCase();addr40(voter,'Voter');
+  const nonce=document.getElementById('rv_salt').value.trim().toLowerCase();if(nonce.length!==64)throw new Error('Nonce must be 64 hex chars');
   const fee=parseInt(document.getElementById('rv_fee').value)||10000;
   showPL('rvo','rvp',buildUnsigned('reveal_vote','type.googleapis.com/types.MessageRevealVote',encReveal(mid,voter,revOut,nonce),{fee}));toast('Payload built');
 }catch(e){toast(e.message,true);}};
 window.signAndSubmit_reveal=async function(){try{
   const mid=document.getElementById('rv_mid').value.trim().toLowerCase();mid40(mid);
-  const voter=document.getElementById('rv_voter').value.trim().toLowerCase();addr40(voter,'Voter');
-  const nonce=document.getElementById('rv_nonce').value.trim().toLowerCase();if(nonce.length!==64)throw new Error('Nonce must be 64 hex chars');
+  const voter=document.getElementById('rv_addr').value.trim().toLowerCase();addr40(voter,'Voter');
+  const nonce=document.getElementById('rv_salt').value.trim().toLowerCase();if(nonce.length!==64)throw new Error('Nonce must be 64 hex chars');
   const fee=parseInt(document.getElementById('rv_fee').value)||10000;
   await doSubmit('reveal_vote','type.googleapis.com/types.MessageRevealVote',encReveal(mid,voter,revOut,nonce),{fee},'btn_reveal','pend_reveal');
 }catch(e){toast(e.message,true);}};
 
 // ── TALLY VOTES
 window.build_tally=function(){try{
-  const mid=document.getElementById('tal_mid').value.trim().toLowerCase();mid40(mid);
-  const addr=document.getElementById('tal_addr').value.trim().toLowerCase();addr40(addr,'Caller');
-  const fee=parseInt(document.getElementById('tal_fee').value)||10000;
+  const mid=document.getElementById('ta_mid').value.trim().toLowerCase();mid40(mid);
+  const addr=document.getElementById('ta_addr').value.trim().toLowerCase();addr40(addr,'Caller');
+  const fee=parseInt(document.getElementById('ta_fee').value)||10000;
   showPL('talo','talp',buildUnsigned('tally_votes','type.googleapis.com/types.MessageTallyVotes',encTally(mid,addr),{fee}));toast('Payload built');
 }catch(e){toast(e.message,true);}};
 window.signAndSubmit_tally=async function(){try{
-  const mid=document.getElementById('tal_mid').value.trim().toLowerCase();mid40(mid);
-  const addr=document.getElementById('tal_addr').value.trim().toLowerCase();addr40(addr,'Caller');
-  const fee=parseInt(document.getElementById('tal_fee').value)||10000;
+  const mid=document.getElementById('ta_mid').value.trim().toLowerCase();mid40(mid);
+  const addr=document.getElementById('ta_addr').value.trim().toLowerCase();addr40(addr,'Caller');
+  const fee=parseInt(document.getElementById('ta_fee').value)||10000;
   await doSubmit('tally_votes','type.googleapis.com/types.MessageTallyVotes',encTally(mid,addr),{fee},'btn_tally','pend_tally');
 }catch(e){toast(e.message,true);}};
 
@@ -1200,7 +1200,7 @@ function showConfirm(title, rows) {
     ],
     signAndSubmit_dispute: () => [
       'File Dispute', [
-        ['Market ID',   (document.getElementById('dis_mid')?.value||'').slice(0,16)+'…', ''],
+        ['Market ID',   (document.getElementById('di_mid')?.value||'').slice(0,16)+'…', ''],
         ['Bond',        v('dis_bond').toLocaleString()+' PRX', ''],
       ]
     ],
@@ -1218,7 +1218,7 @@ function showConfirm(title, rows) {
     ],
     signAndSubmit_tally: () => [
       'Tally Votes', [
-        ['Market ID',   (document.getElementById('tal_mid')?.value||'').slice(0,16)+'…', ''],
+        ['Market ID',   (document.getElementById('ta_mid')?.value||'').slice(0,16)+'…', ''],
       ]
     ],
     signAndSubmit_finalize: () => [
@@ -1234,8 +1234,8 @@ function showConfirm(title, rows) {
     ],
     signAndSubmit_claimcreator: () => [
       'Claim Creator Fee', [
-        ['Market ID', (document.getElementById('ccf_mid')?.value||'').slice(0,16)+'…', ''],
-        ['Creator',   (document.getElementById('ccf_addr')?.value||'').slice(0,16)+'…', ''],
+        ['Market ID', (document.getElementById('cf_mid')?.value||'').slice(0,16)+'…', ''],
+        ['Creator',   (document.getElementById('cf_addr')?.value||'').slice(0,16)+'…', ''],
       ]
     ],
     signAndSubmit_cancel: () => [
@@ -1287,7 +1287,7 @@ injectKeyboardCopyBtns();
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
-const _niHost=document.getElementById('ni_host');if(_niHost)_niHost.value=getRPCHost();
+const _niHost=document.getElementById('rpc_url');if(_niHost)_niHost.value=getRPCHost();
 buildMobNav();
 checkRPC();
 loadMarkets();
@@ -1884,24 +1884,24 @@ function encClaimCreatorFee(mid,creator){return cat(bf(1,h2b(mid)),bf(2,h2b(crea
 
 window.build_claimcreator=function(){
   try{
-    const mid=document.getElementById('ccf_mid').value.trim().toLowerCase();mid40(mid);
-    const addr=document.getElementById('ccf_addr').value.trim().toLowerCase();addr40(addr,'Creator');
-    const fee=parseInt(document.getElementById('ccf_fee').value)||10000;
+    const mid=document.getElementById('cf_mid').value.trim().toLowerCase();mid40(mid);
+    const addr=document.getElementById('cf_addr').value.trim().toLowerCase();addr40(addr,'Creator');
+    const fee=parseInt(document.getElementById('cf_fee').value)||10000;
     showPL('ccfo','ccfp',buildUnsigned('claim_creator_fee','type.googleapis.com/types.MessageClaimCreatorFee',encClaimCreatorFee(mid,addr),{fee}));
     toast('Payload built');
   }catch(e){toast(e.message,true);}
 };
 window.signAndSubmit_claimcreator=async function(){
   try{
-    const mid=document.getElementById('ccf_mid').value.trim().toLowerCase();mid40(mid);
-    const addr=document.getElementById('ccf_addr').value.trim().toLowerCase();addr40(addr,'Creator');
-    const fee=parseInt(document.getElementById('ccf_fee').value)||10000;
+    const mid=document.getElementById('cf_mid').value.trim().toLowerCase();mid40(mid);
+    const addr=document.getElementById('cf_addr').value.trim().toLowerCase();addr40(addr,'Creator');
+    const fee=parseInt(document.getElementById('cf_fee').value)||10000;
     await doSubmit('claim_creator_fee','type.googleapis.com/types.MessageClaimCreatorFee',encClaimCreatorFee(mid,addr),{fee},'btn_claimcreator','pend_claimcreator');
   }catch(e){toast(e.message,true);}
 };
 window.fillClaimCreator=function(id){
-  document.getElementById('ccf_mid').value=id;
-  if(signerAddress)document.getElementById('ccf_addr').value=signerAddress;
+  document.getElementById('cf_mid').value=id;
+  if(signerAddress)document.getElementById('cf_addr').value=signerAddress;
   showPage('claimcreator',null);
 };
 
